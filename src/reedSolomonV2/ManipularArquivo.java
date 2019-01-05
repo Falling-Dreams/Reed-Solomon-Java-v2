@@ -15,6 +15,7 @@ public class ManipularArquivo {
 
 		// k=1656; n=1856; n-k=200
 		// k=1656; n=2056; n-k=400
+		//Codificado ainda continua legivel pelo windows
 		GenericGF gf = new GenericGF(69643, 65536, 1);
 		ManipularArquivo manipulacao = new ManipularArquivo();
 
