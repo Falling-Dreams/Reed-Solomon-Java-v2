@@ -3,103 +3,120 @@ package reedSolomonV2;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.SecureRandom;
 import java.nio.file.Path;
 import java.util.*;
 
 public class ManipularArquivo {
 
-	private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
-	int[] byteParaInt = new int[1800];
-
 	public static void main(String[] args) throws IOException, ReedSolomonException {
 
-		// k=1656; n=1856; n-k=200
-		// k=1656; n=2056; n-k=400
-		//Codificado ainda continua legivel pelo windows
+		// k=2301; n=2501; n-k=200		
+		// Codificado ainda continua legivel pelo windows
 		GenericGF gf = new GenericGF(69643, 65536, 1);
 		ManipularArquivo manipulacao = new ManipularArquivo();
+		SecureRandom random = new SecureRandom();
+		int k = 0;
+		int l = 0;
 
 		// Strings com os locais dos arquivos a serem gravados ou manipulados
-		String arquivoLocal = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\Q6_v2.txt";
+		String arquivoLocal = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\Termo de Movimentação - HOMOL.pdf";
 
 		String arquivoNome = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\Codificado";
 
 		String redundanciaNome = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\redundancia.rdg";
 
-		String arquivoDecodificadoLocal = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)Codificado.txt";
+		String arquivoDecodificadoLocal = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)Codificado.pdf";
 
 		String arquivoDecodificadoNome = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\Decodificado";
-
-		// byte[] arquivoLidoEmBytes = manipulacao.bytesArquivo(arquivoLocal);
-		int[] data = manipulacao.byteSignedParaUnsigned(arquivoLocal, 400);
-
-		System.out.println("Quantidade de simbolos: " + "\n" + data.length);
 		
-		//Codificacao
-		ReedSolomonEncoder encoder = new ReedSolomonEncoder(gf);
-		System.out.println("Antes da codificacao: " + "\n" + Arrays.toString(data));
-		encoder.encode(data, 400);
-		System.out.println("Depois da codificacao: " + "\n" + Arrays.toString(data));
+		int[] data = ManipularArquivo.byteSignedParaUnsigned(arquivoLocal, 200);
+		System.out.println("Quantidade de simbolos, com os indices para paridade: " + data.length);
 
+		// Codificacao
+		ReedSolomonEncoder encoder = new ReedSolomonEncoder(gf);
+		System.out.println("\n" + "Antes da codificacao: " + "\n" + Arrays.toString(data));
+		System.out.println("Quantidade de simbolos: " + data.length);
+		encoder.encode(data, 200);
+		System.out.println("\n" + "Depois da codificacao: " + "\n" + Arrays.toString(data));
+		System.out.println("Quantidade de simbolos: " + data.length);
+		
 		// Guarda a redundancia no vetor redundanciaInt
 		int temp = 0;
 		int ndP = 0;
-		int[] redundanciaInt = new int[400]; // tamanho do vetor = n-k
-		for (int x = 1656; x < 2056; x++) {
+		int[] redundanciaInt = new int[200]; // tamanho do vetor = n-k
+		for (int x = 2301; x < 2501; x++) {
 			temp = data[x];
 			redundanciaInt[ndP] = temp;
 			ndP++;
 		}
 		// Apaga redundancia
-		for (int x = 1656; x < 2056; x++) {
+		for (int x = 2301; x < 2501; x++) {
 			data[x] = 0;
 		}
 
-		System.out.println("Novo vetor de dados sem a redundancia: " + "\n" + Arrays.toString(data));
-		System.out.println("Redundancia: " + "\n" + Arrays.toString(redundanciaInt));
+		System.out.println("\n" + "Novo vetor de dados sem a redundancia: " + "\n" + Arrays.toString(data));
+		System.out.println("Quantidade de simbolos: " + data.length);
+		System.out.println("\n" + "Redundancia: " + "\n" + Arrays.toString(redundanciaInt));
+		System.out.println("Quantidade de simbolos: " + redundanciaInt.length);
 
 		// Transformar de int[] para byte[] e guardar o arquivo codificado
 		// Guardar a redundancia em um arquivo sem converter de int[] para byte[]
-		byte[] codificado = manipulacao.byteUnsignedParaSigned(data);
-		manipulacao.gravarRedundancia(redundanciaInt, redundanciaNome);
-		System.out.println("Volta do vetor de dados de byte para int: " + "\n" + Arrays.toString(codificado));
-		manipulacao.gravaArquivo(codificado, arquivoLocal, arquivoNome);
+		byte[] codificado = ManipularArquivo.byteUnsignedParaSigned(data);
+		ManipularArquivo.gravarRedundancia(redundanciaInt, redundanciaNome);
+		System.out.println("\n" + "Volta do vetor de dados de byte para int: " + "\n" + Arrays.toString(codificado));
+		System.out.println("Quantidade de simbolos: " + codificado.length);
+		
+		//Vetor de bytes com SecureRandom
+		byte[] corrupcao = new byte[100];
+	    random.nextBytes(corrupcao);
+		
+		 // Concatenando dado com corrupcao randomica, de acordo com n-k/2
+		  for (int x = 0; x < 100; x++) {
+		  codificado[x] = corrupcao[l]; 
+		  l++; 
+		  }
+		  
+
+		// Gravar arquivo codificado e corrompido
+		ManipularArquivo.gravaArquivo(codificado, arquivoLocal, arquivoNome);
 
 		// Transformar de byte[] para int[] e corromper
-		int[] voltaDeByte = manipulacao.byteSignedParaUnsignedSemParidade(
-				"Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\Codificado.txt");
+		int[] voltaDeByte = ManipularArquivo.byteSignedParaUnsignedSemParidade(
+				"Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\Codificado.pdf");
 
-		// Corrupcao
-		int i, k = 0;
-		for (i = 0; i < 200; i++) {
-			voltaDeByte[i] = 1;
-		}
-		/*
-		//Decodificacao
-		ReedSolomonDecoder decoder = new ReedSolomonDecoder(gf);
-
-		System.out.println("Corrupcao: " + "\n" + Arrays.toString(voltaDeByte));
-
-		// Concatenando dado com redudancia
-		for (int x = 1656; x < 2056; x++) {
-			voltaDeByte[x] = redundanciaInt[k];
-			k++;
-		}
-
-		System.out.println("Vetor de dados concatenado com redundancia: " + "\n" + Arrays.toString(voltaDeByte));
-
-		decoder.decode(voltaDeByte, 400);
-
-		System.out.println("Mensagem corrigida: " + "\n" + Arrays.toString(voltaDeByte));
-
-		// gravo o arquivo decodificado
-		byte[] decodificado = manipulacao.byteUnsignedParaSigned(voltaDeByte);
-		manipulacao.gravaArquivo(decodificado, arquivoDecodificadoLocal, arquivoDecodificadoNome);
-		*/
+		
+		  //Decodificacao 
+		  ReedSolomonDecoder decoder = new ReedSolomonDecoder(gf);
+		  
+		  System.out.println("\n" + "Corrupcao: " + "\n" + Arrays.toString(voltaDeByte));
+		  System.out.println("Quantidade de simbolos: " + voltaDeByte.length);
+		  
+		  // Concatenando dado com redudancia 
+		  for (int x = 2301; x < 2501; x++) {
+		  voltaDeByte[x] = redundanciaInt[k]; 
+		  k++; 
+		  }
+		  
+		  System.out.println("\n" + "Vetor de dados concatenado com redundancia: " + "\n" +
+		  Arrays.toString(voltaDeByte));
+		  System.out.println("Quantidade de simbolos: " + voltaDeByte.length);
+		  
+		  decoder.decode(voltaDeByte, 200);
+		  
+		  System.out.println("\n" + "Mensagem corrigida: " + "\n" +
+		  Arrays.toString(voltaDeByte));
+		  System.out.println("Quantidade de simbolos: " + voltaDeByte.length);
+		  
+		  // gravo o arquivo decodificado 
+		  byte[] decodificado =
+		  ManipularArquivo.byteUnsignedParaSigned(voltaDeByte);
+		  ManipularArquivo.gravaArquivo(decodificado, arquivoDecodificadoLocal,
+		  arquivoDecodificadoNome);		 
 	}
 
 	// Gravar os bytes de um arquivo em um vetor de bytes
-	private byte[] lerBytesArquivo(String fileName) throws IOException {
+	private static byte[] lerBytesArquivo(String fileName) throws IOException {
 		Path path = Paths.get(fileName);
 		byte[] data = Files.readAllBytes(path);
 		return data;
@@ -182,7 +199,7 @@ public class ManipularArquivo {
 	}
 
 	// Gravar um arquivo
-	private File gravaArquivo(byte[] convertidoDeIntArray, String localDoArquivo, String nomeDoArquivo)
+	private static File gravaArquivo(byte[] convertidoDeIntArray, String localDoArquivo, String nomeDoArquivo)
 			throws IOException {
 		File f = new File(localDoArquivo);
 		// Recuperar extensao do arquivo
@@ -200,7 +217,7 @@ public class ManipularArquivo {
 	}
 
 	// Gravar a redundancia em um arquivo
-	private void gravarRedundancia(int[] vetorRedundancia, String localComNomeArquivo) throws IOException {
+	private static void gravarRedundancia(int[] vetorRedundancia, String localComNomeArquivo) throws IOException {
 		OutputStream os = new FileOutputStream(localComNomeArquivo);
 		for (int i = 0; i < vetorRedundancia.length; i++) {
 			os.write(vetorRedundancia[i]);
@@ -216,42 +233,5 @@ public class ManipularArquivo {
 
 	// Corromper x posicoes do vetor de dados e guardar o arquivo
 
-	/*
-	 * Nao tenho certeza sobre esse metodo, talvez uma tentativa sem sucesso de
-	 * conversao //Converter de int[] para byte[] private static void
-	 * converteDeIntParaByte(int[] values) throws IOException {
-	 * ByteArrayOutputStream baos = new ByteArrayOutputStream(); DataOutputStream
-	 * dos = new DataOutputStream(baos); // int num_input = 0; int size =
-	 * values.length; int[] dados = new int[size];
-	 * 
-	 * for (int i = 0; i < dados.length; ++i) { dos.writeInt(dados[i]); }
-	 * baos.toByteArray(); }
-	 */
-
-	/*
-	 * private static String[] bytesParaHex(byte[] dados){ byte num_input = 0; int
-	 * size = dados.length; String[] dadosConvertidos = new String[size]; for (int i
-	 * = 0; i < dados.length; ++i) { num_input = dados[i]; dadosConvertidos[i] =
-	 * bytesToHex4(num_input); } return dadosConvertidos; }
-	 * 
-	 * private static StringBuffer bytesToHex(byte bytes){ StringBuffer buffer = new
-	 * StringBuffer(); buffer.append(Character.forDigit((bytes >> 4) & 0xF, 16));
-	 * buffer.append(Character.forDigit((bytes & 0xF), 16)); return buffer; }
-	 * 
-	 * //Transformar byte[] para hexadecimal[] private static String
-	 * bytesToHex2(byte hashInBytes) { StringBuilder sb = new StringBuilder();
-	 * sb.append(String.format("%02x", hashInBytes)); return sb.toString(); }
-	 * 
-	 * @SuppressWarnings("resource") private static String bytesToHex3(byte
-	 * byteUnitario){ Formatter formatter = new Formatter();
-	 * formatter.format("%02x", byteUnitario); String hex = formatter.toString();
-	 * return hex; }
-	 * 
-	 * private static String bytesToHex4(byte byteUnitario){ int j = 0; char[]
-	 * hexChars = new char[2]; int v = byteUnitario & 0xFF; hexChars[j * 2] =
-	 * hexArray[v >>> 4]; hexChars[j * 2 + 1] = hexArray[v & 0x0F];
-	 * 
-	 * return new String(hexChars); }
-	 */
 
 }
