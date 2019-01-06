@@ -7,81 +7,73 @@ import java.security.SecureRandom;
 import java.nio.file.Path;
 import java.util.*;
 
+/*
+ * 	TODO: Percorrer o vetor de dados e guardar a redundancia
+
+	TODO: Corromper n-k posicoes do vetor de dados
+
+	TODO: Concatenar o vetor de redundancia com o vetor de dados
+
+	TODO: Corromper x posicoes do vetor de dados e guardar o arquivo
+ */
+
 public class ManipularArquivo {
 
 	public static void main(String[] args) throws IOException, ReedSolomonException {
 
-		// k=2301; n=2501; n-k=200
+		// k=2301; n=2501; n-k=200; t=100
 		// Codificado ainda continua legivel pelo windows
+		String arquivoLocal = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\GPEs em atividade.pdf";
+		ManipularArquivo.degradacaoCorretiva(arquivoLocal);
+
+	}
+
+	// Cria os arquivos codificado e redundancia. Corrompe original
+	private static void degradacaoCorretiva(String localDoArquivo) throws IOException, ReedSolomonException {
 		GenericGF gf = new GenericGF(69643, 65536, 1);
-		ManipularArquivo manipulacao = new ManipularArquivo();
-		SecureRandom random = new SecureRandom();
-		int k = 0;
-		int l = 0;
-
-		// Strings com os locais dos arquivos a serem gravados ou manipulados
-		String arquivoLocal = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\Termo de Movimentação - HOMOL.pdf";
-
+		int qtdSimbolosParidade = 200;
+		int t = 100;
+		
 		String arquivoNome = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\Codificado";
-
 		String redundanciaNome = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\redundancia.rdg";
-
-		String arquivoDecodificadoLocal = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)Codificado.pdf";
-
+		String arquivoDecodificadoLocal = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\Codificado.pdf";
 		String arquivoDecodificadoNome = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\Decodificado";
+		// Transforma vetor de bytes em vetor de inteiros unsigned
+		int[] arquivo = ManipularArquivo.byteSignedParaUnsigned(localDoArquivo, qtdSimbolosParidade);
 
-		int[] data = ManipularArquivo.byteSignedParaUnsigned(arquivoLocal, 200);
-
-		// Codificacao
+		// Codificacao e vetor da redundancia
 		ReedSolomonEncoder encoder = new ReedSolomonEncoder(gf);
-		System.out.println("\n" + "Antes da codificacao: " + "\n" + Arrays.toString(data));
-		System.out.println("Quantidade de simbolos: " + data.length);
-		encoder.encode(data, 200);
-		System.out.println("\n" + "Depois da codificacao: " + "\n" + Arrays.toString(data));
-		System.out.println("Quantidade de simbolos: " + data.length);
-		int[] redundanciaInt = manipulacao.salvaVetorRedundancia(data, 200);
+		encoder.encode(arquivo, qtdSimbolosParidade);
+		int[] vetorParidade = ManipularArquivo.salvaVetorRedundancia(arquivo, qtdSimbolosParidade);
 
 		// Apaga redundancia
-		manipulacao.zerarRedundancia(data, 200);
+		ManipularArquivo.zerarRedundancia(arquivo, qtdSimbolosParidade);
 
-		// Transformar de int[] para byte[] e guardar o arquivo codificado
-		byte[] codificado = ManipularArquivo.byteUnsignedParaSigned(data);
+		// Transformar de int[] para byte[]
+		byte[] codificado = ManipularArquivo.byteUnsignedParaSigned(arquivo);
+
 		// Guardar a redundancia em um arquivo sem converter de int[] para byte[]
-		ManipularArquivo.gravarRedundancia(redundanciaInt, redundanciaNome);
-		System.out.println("\n" + "Volta do vetor de dados de byte para int: " + "\n" + Arrays.toString(codificado));
-		System.out.println("Quantidade de simbolos: " + codificado.length);
-		
-		//Cria vetor de bytes ja codificados pelo encoder e corrompido t posicoes
-		byte[] codificadoCorrompido = manipulacao.corrompeDado(codificado, 100);
+		ManipularArquivo.gravarRedundancia(vetorParidade, redundanciaNome);
+
+		// Cria vetor de bytes ja codificados pelo encoder e corrompido t posicoes
+		ManipularArquivo.corrompeDado(codificado, t);
 
 		// Gravar arquivo codificado e corrompido
-		ManipularArquivo.gravaArquivo(codificadoCorrompido, arquivoLocal, arquivoNome);
+		ManipularArquivo.gravaArquivo(codificado, localDoArquivo, arquivoNome);
 
-		// Transformar de byte[] para int[] e corromper
-		int[] voltaDeByte = ManipularArquivo.byteSignedParaUnsignedSemParidade(
-				"Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\Codificado.pdf");
+		// Transformar de byte[] para int[] guardar arquivo corrompido
+		int[] voltaDeByte = ManipularArquivo.byteSignedParaUnsignedSemParidade(arquivoDecodificadoLocal);
 
 		// Decodificacao
 		ReedSolomonDecoder decoder = new ReedSolomonDecoder(gf);
 
-		System.out.println("\n" + "Corrupcao: " + "\n" + Arrays.toString(voltaDeByte));
-		System.out.println("Quantidade de simbolos: " + voltaDeByte.length);
-
 		// Concatenando dado com redudancia
-		for (int x = 2301; x < 2501; x++) {
-			voltaDeByte[x] = redundanciaInt[k];
-			k++;
-		}
+		ManipularArquivo.concatenaDadoComRedundancia(voltaDeByte, vetorParidade, qtdSimbolosParidade);
 
-		System.out.println("\n" + "Vetor de dados concatenado com redundancia: " + "\n" + Arrays.toString(voltaDeByte));
-		System.out.println("Quantidade de simbolos: " + voltaDeByte.length);
+		decoder.decode(voltaDeByte, qtdSimbolosParidade);
 
-		decoder.decode(voltaDeByte, 200);
-
-		System.out.println("\n" + "Mensagem corrigida: " + "\n" + Arrays.toString(voltaDeByte));
-		System.out.println("Quantidade de simbolos: " + voltaDeByte.length);
-
-		// gravo o arquivo decodificado
+		// gravo o arquivo decodificado com o mesmo tamanho do arquivo original, sem os
+		// indices de paridade
 		byte[] decodificado = ManipularArquivo.byteUnsignedParaSigned(voltaDeByte);
 		ManipularArquivo.gravaArquivo(decodificado, arquivoDecodificadoLocal, arquivoDecodificadoNome);
 	}
@@ -115,7 +107,8 @@ public class ManipularArquivo {
 			}
 			vetorDevolvido[i] = valorEmIntDoByte;
 		}
-		System.out.println("Quantidade de simbolos, com os indices para paridade: " + vetorDevolvido.length);
+		//System.out.println("Antes da codificacao: " + "\n" + Arrays.toString(vetorDevolvido));
+		System.out.println("Quantidade de simbolos, sem os indices de paridade: " + (vetorDevolvido.length - qtdSimbolosParidade));
 		return vetorDevolvido;
 	}
 
@@ -153,6 +146,9 @@ public class ManipularArquivo {
 			valorEmIntDoByte = vetorIntUnsigned[i];
 			novoVetorBytes[i] = byteParaInt(valorEmIntDoByte);
 		}
+		//System.out
+				//.println("\n" + "Volta do vetor de dados de byte para int: " + "\n" + Arrays.toString(novoVetorBytes));
+		System.out.println("Quantidade de simbolos: " + novoVetorBytes.length);
 		return novoVetorBytes;
 	}
 
@@ -207,7 +203,7 @@ public class ManipularArquivo {
 			redundanciaInt[ndP] = temp;
 			ndP++;
 		}
-		System.out.println("\n" + "Redundancia: " + "\n" + Arrays.toString(redundanciaInt));
+		//System.out.println("\n" + "Redundancia: " + "\n" + Arrays.toString(redundanciaInt));
 		System.out.println("Quantidade de simbolos de redundancia: " + redundanciaInt.length);
 		return redundanciaInt;
 	}
@@ -216,12 +212,12 @@ public class ManipularArquivo {
 		for (int x = dados.length - tamanhoParidade; x < dados.length; x++) {
 			dados[x] = 0;
 		}
-		System.out.println("\n" + "Novo vetor de dados com a redundancia zerada: " + "\n" + Arrays.toString(dados));
+		//System.out.println("\n" + "Novo vetor de dados com a redundancia zerada: " + "\n" + Arrays.toString(dados));
 		System.out.println("Quantidade de simbolos: " + dados.length);
 		return dados;
 	}
 
-	private static byte[] corrompeDado(byte[] dados, int t) {
+	private static void corrompeDado(byte[] dados, int t) {
 		// Vetor de bytes com SecureRandom de tamanho t
 		SecureRandom random = new SecureRandom();
 		byte[] corrupcao = new byte[t];
@@ -232,15 +228,33 @@ public class ManipularArquivo {
 			dados[x] = corrupcao[l];
 			l++;
 		}
-		return dados;
+		//System.out.println("\n" + "Corrupcao: " + "\n" + Arrays.toString(dados));
+		System.out.println("Quantidade de simbolos: " + dados.length);
 	}
 
-	// Percorrer o vetor de dados e guardar a redundancia
-
-	// Corromper n-k posicoes do vetor de dados
-
-	// Concatenar o vetor de redundancia com o vetor de dados
-
-	// Corromper x posicoes do vetor de dados e guardar o arquivo
+	public static void concatenaDadoComRedundancia(int[] dados, int[] vetorRedundancia, int tamanhoParidade) {
+		// Concatenando dado com redudancia
+		int k = 0;
+		for (int x = dados.length - tamanhoParidade; x < dados.length; x++) {
+			dados[x] = vetorRedundancia[k];
+			k++;
+		}
+		//System.out.println("\n" + "Vetor de dados concatenado com redundancia: " + "\n" + Arrays.toString(dados));
+		System.out.println("Quantidade de simbolos: " + dados.length);
+	}
+	
+	//Arrays sao imutaveis, uma vez criados o seu tamanho NAO pode ser alterado, portanto, o metodo abaixo nao funciona
+	/*
+	public static byte[] apagaParidade(byte[] dados, int qtdSimbolosParidade) {
+		byte[] dadoSemParidade = new byte[dados.length - qtdSimbolosParidade];
+		byte temp = 0;
+		int ndP = 0;
+		for (int x = 0; x < dados.length; x++) {
+			temp = dados[x];
+			dadoSemParidade[ndP] = temp;
+			ndP++;
+		}		
+		return dadoSemParidade;
+	}*/
 
 }

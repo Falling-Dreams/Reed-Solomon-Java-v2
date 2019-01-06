@@ -16,6 +16,8 @@
 
 package reedSolomonV2;
 
+import java.util.Arrays;
+
 import reedSolomonV2.*;
 
 
@@ -86,6 +88,8 @@ public final class ReedSolomonDecoder {
 	      }
 	      received[position] = GenericGF.addOrSubtract(received[position], errorMagnitudes[i]);
 	    }
+		//System.out.println("\n" + "Mensagem corrigida: " + "\n" + Arrays.toString(received));
+		System.out.println("Quantidade de simbolos: " + received.length);
 	  }
 
 	  private GenericGFPoly[] runEuclideanAlgorithm(GenericGFPoly a, GenericGFPoly b, int R)
