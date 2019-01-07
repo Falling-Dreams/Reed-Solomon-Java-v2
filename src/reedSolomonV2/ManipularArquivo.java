@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 import java.security.SecureRandom;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /*
  * 	TODO: Percorrer o vetor de dados e guardar a redundancia
@@ -23,23 +24,18 @@ public class ManipularArquivo {
 
 		// k=2301; n=2501; n-k=200; t=100
 		// Codificado ainda continua legivel pelo windows
-		String arquivoLocal = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\GPEs em atividade.pdf";
-		ManipularArquivo.degradacaoCorretiva(arquivoLocal);
-
+		String localAbsoluto = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\GPEs em atividade.pdf";
+		ManipularArquivo.degradacaoCorretiva(localAbsoluto);
 	}
 
 	// Cria os arquivos codificado e redundancia. Corrompe original
-	private static void degradacaoCorretiva(String localDoArquivo) throws IOException, ReedSolomonException {
+	private static void degradacaoCorretiva(String localAbsoluto) throws IOException, ReedSolomonException {
 		GenericGF gf = new GenericGF(69643, 65536, 1);
 		int qtdSimbolosParidade = 200;
 		int t = 100;
-		
-		String arquivoNome = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\Codificado";
-		String redundanciaNome = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\redundancia.rdg";
-		String arquivoDecodificadoLocal = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\Codificado.pdf";
-		String arquivoDecodificadoNome = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\Decodificado";
+
 		// Transforma vetor de bytes em vetor de inteiros unsigned
-		int[] arquivo = ManipularArquivo.byteSignedParaUnsigned(localDoArquivo, qtdSimbolosParidade);
+		int[] arquivo = ManipularArquivo.byteSignedParaUnsigned(localAbsoluto, qtdSimbolosParidade);
 
 		// Codificacao e vetor da redundancia
 		ReedSolomonEncoder encoder = new ReedSolomonEncoder(gf);
@@ -53,29 +49,28 @@ public class ManipularArquivo {
 		byte[] codificado = ManipularArquivo.byteUnsignedParaSigned(arquivo);
 
 		// Guardar a redundancia em um arquivo sem converter de int[] para byte[]
-		ManipularArquivo.gravarRedundancia(vetorParidade, redundanciaNome);
+		ManipularArquivo.gravarRedundancia(vetorParidade, localAbsoluto);
 
 		// Cria vetor de bytes ja codificados pelo encoder e corrompido t posicoes
 		ManipularArquivo.corrompeDado(codificado, t);
 
 		// Gravar arquivo codificado e corrompido
-		ManipularArquivo.gravaArquivo(codificado, localDoArquivo, arquivoNome);
+		ManipularArquivo.gravaArquivoCodificado(codificado, localAbsoluto);
 
 		// Transformar de byte[] para int[] guardar arquivo corrompido
-		int[] voltaDeByte = ManipularArquivo.byteSignedParaUnsignedSemParidade(arquivoDecodificadoLocal);
+		int[] voltaDeByte = ManipularArquivo.byteSignedParaUnsignedSemParidade(localAbsoluto);
 
 		// Decodificacao
 		ReedSolomonDecoder decoder = new ReedSolomonDecoder(gf);
 
 		// Concatenando dado com redudancia
 		ManipularArquivo.concatenaDadoComRedundancia(voltaDeByte, vetorParidade, qtdSimbolosParidade);
-
 		decoder.decode(voltaDeByte, qtdSimbolosParidade);
 
 		// gravo o arquivo decodificado com o mesmo tamanho do arquivo original, sem os
 		// indices de paridade
 		byte[] decodificado = ManipularArquivo.byteUnsignedParaSigned(voltaDeByte);
-		ManipularArquivo.gravaArquivo(decodificado, arquivoDecodificadoLocal, arquivoDecodificadoNome);
+		ManipularArquivo.gravaArquivoDecodificado(decodificado, localAbsoluto);
 	}
 
 	// Gravar os bytes de um arquivo em um vetor de bytes
@@ -107,16 +102,41 @@ public class ManipularArquivo {
 			}
 			vetorDevolvido[i] = valorEmIntDoByte;
 		}
-		//System.out.println("Antes da codificacao: " + "\n" + Arrays.toString(vetorDevolvido));
-		System.out.println("Quantidade de simbolos, sem os indices de paridade: " + (vetorDevolvido.length - qtdSimbolosParidade));
+		// System.out.println("Antes da codificacao: " + "\n" +
+		// Arrays.toString(vetorDevolvido));
+		System.out.println(
+				"Quantidade de simbolos, sem os indices de paridade: " + (vetorDevolvido.length - qtdSimbolosParidade));
 		return vetorDevolvido;
 	}
 
 	// Transformar os bytes de um arquivo lido de SIGNED [-128 a 127] em UNSIGNED [0
 	// a 255] e escrever em um vetor de inteiros
 	// Usar esse metodos para as demais conversoes que nao a primeira
-	private static int[] byteSignedParaUnsignedSemParidade(String fileName) throws IOException {
-		Path path = Paths.get(fileName);
+	private static int[] byteSignedParaUnsignedSemParidade(String localAbsolutoArquivo) throws IOException {
+
+		File f = new File(localAbsolutoArquivo);
+		// Recupera nome e extensao do arquivo
+		String arquivoComExtensao = "";
+		int in = f.getAbsolutePath().lastIndexOf("\\");
+		if (in > -1) {
+			arquivoComExtensao = f.getAbsolutePath().substring(in + 1);
+		}
+		// Separa nome e extensao do arquivo
+		String[] separaNomeDaExtensao = arquivoComExtensao.split("[.]");
+		String arquivo = separaNomeDaExtensao[0];
+		String extensao = separaNomeDaExtensao[1];
+
+		// Coleta o local onde o arquivo esta localizado
+		String[] separaDiretoriosArquivo = localAbsolutoArquivo.split(Pattern.quote("\\"));
+		String parte1 = separaDiretoriosArquivo[0];
+		String parte2 = separaDiretoriosArquivo[1];
+		String parte3 = separaDiretoriosArquivo[2];
+		String parte4 = separaDiretoriosArquivo[3];
+		String parte5 = separaDiretoriosArquivo[4];
+		String diretorioRaiz = parte1 + "\\" + parte2 + "\\" + parte3 + "\\" + parte4 + "\\";
+		String arquivoCodificado = diretorioRaiz + arquivo + "_" + "Codificado" + "." + extensao;
+
+		Path path = Paths.get(arquivoCodificado);
 		byte[] bytesArquivoLido = Files.readAllBytes(path);
 		int tamanhoVetorInt = bytesArquivoLido.length;
 		int valorEmIntDoByte = 0;
@@ -146,8 +166,9 @@ public class ManipularArquivo {
 			valorEmIntDoByte = vetorIntUnsigned[i];
 			novoVetorBytes[i] = byteParaInt(valorEmIntDoByte);
 		}
-		//System.out
-				//.println("\n" + "Volta do vetor de dados de byte para int: " + "\n" + Arrays.toString(novoVetorBytes));
+		// System.out
+		// .println("\n" + "Volta do vetor de dados de byte para int: " + "\n" +
+		// Arrays.toString(novoVetorBytes));
 		System.out.println("Quantidade de simbolos: " + novoVetorBytes.length);
 		return novoVetorBytes;
 	}
@@ -167,12 +188,12 @@ public class ManipularArquivo {
 	}
 
 	// Gravar um arquivo
-	private static File gravaArquivo(byte[] convertidoDeIntArray, String localDoArquivo, String nomeDoArquivo)
+	private static File gravaArquivo(byte[] convertidoDeIntArray, String localAbsolutoArquivo, String nomeDoArquivo)
 			throws IOException {
-		File f = new File(localDoArquivo);
-		// Recuperar extensao do arquivo
+		File f = new File(localAbsolutoArquivo);
+		// Recupera nome e extensao do arquivo
 		String extensao = "";
-		int in = f.getAbsolutePath().lastIndexOf(".");
+		int in = f.getAbsolutePath().lastIndexOf("\\");
 		if (in > -1) {
 			extensao = f.getAbsolutePath().substring(in + 1);
 		}
@@ -184,9 +205,103 @@ public class ManipularArquivo {
 		return newFile;
 	}
 
+	// Gravar codificado
+	private static File gravaArquivoCodificado(byte[] arquivoCodificado, String localAbsolutoArquivo)
+			throws IOException {
+		File f = new File(localAbsolutoArquivo);
+
+		// Recupera nome e extensao do arquivo
+		String arquivoComExtensao = "";
+		int in = f.getAbsolutePath().lastIndexOf("\\");
+		if (in > -1) {
+			arquivoComExtensao = f.getAbsolutePath().substring(in + 1);
+		}
+
+		// Separa nome e extensao do arquivo
+		String[] separaNomeDaExtensao = arquivoComExtensao.split("[.]");
+		String arquivo = separaNomeDaExtensao[0];
+		String extensao = separaNomeDaExtensao[1];
+
+		// Coleta o local onde o arquivo esta localizado
+		String[] diretoriosArquivo = localAbsolutoArquivo.split(Pattern.quote("\\"));
+		String parte1 = diretoriosArquivo[0];
+		String parte2 = diretoriosArquivo[1];
+		String parte3 = diretoriosArquivo[2];
+		String parte4 = diretoriosArquivo[3];
+		String parte5 = diretoriosArquivo[4];
+		String diretorioRaiz = parte1 + "\\" + parte2 + "\\" + parte3 + "\\" + parte4 + "\\";
+
+		// Grava o arquivo com o nome fornecido e a extensao lida
+		File newFile = new File(diretorioRaiz + arquivo + "_" + "Codificado" + "." + extensao);
+		FileOutputStream stream = new FileOutputStream(newFile);
+		stream.write(arquivoCodificado);
+		stream.close();
+		return newFile;
+	}
+
+	// Gravar decodificado
+	private static File gravaArquivoDecodificado(byte[] arquivoDecodificado, String localAbsolutoArquivo)
+			throws IOException {
+		File f = new File(localAbsolutoArquivo);
+
+		// Recupera nome e extensao do arquivo
+		String arquivoComExtensao = "";
+		int in = f.getAbsolutePath().lastIndexOf("\\");
+		if (in > -1) {
+			arquivoComExtensao = f.getAbsolutePath().substring(in + 1);
+		}
+
+		// Separa nome e extensao do arquivo
+		String[] separaNomeDaExtensao = arquivoComExtensao.split("[.]");
+		String arquivo = separaNomeDaExtensao[0];
+		String extensao = separaNomeDaExtensao[1];
+
+		// Coleta o local onde o arquivo esta localizado
+		String[] diretoriosArquivo = localAbsolutoArquivo.split(Pattern.quote("\\"));
+		String parte1 = diretoriosArquivo[0];
+		String parte2 = diretoriosArquivo[1];
+		String parte3 = diretoriosArquivo[2];
+		String parte4 = diretoriosArquivo[3];
+		String parte5 = diretoriosArquivo[4];
+		String diretorioRaiz = parte1 + "\\" + parte2 + "\\" + parte3 + "\\" + parte4 + "\\";
+
+		// Grava o arquivo com o nome fornecido e a extensao lida
+		File newFile = new File(diretorioRaiz + arquivo + "_" + "Decodificado" + "." + extensao);
+		FileOutputStream stream = new FileOutputStream(newFile);
+		stream.write(arquivoDecodificado);
+		stream.close();
+		return newFile;
+	}
+
 	// Gravar a redundancia em um arquivo
-	private static void gravarRedundancia(int[] vetorRedundancia, String localComNomeArquivo) throws IOException {
-		OutputStream os = new FileOutputStream(localComNomeArquivo);
+	private static void gravarRedundancia(int[] vetorRedundancia, String localAbsolutoArquivo) throws IOException {
+
+		File f = new File(localAbsolutoArquivo);
+
+		// Recupera nome e extensao do arquivo
+		String arquivoComExtensao = "";
+		int in = f.getAbsolutePath().lastIndexOf("\\");
+		if (in > -1) {
+			arquivoComExtensao = f.getAbsolutePath().substring(in + 1);
+		}
+
+		// Separa nome e extensao do arquivo
+		String[] separaNomeDaExtensao = arquivoComExtensao.split("[.]");
+		String arquivo = separaNomeDaExtensao[0];
+		String extensao = separaNomeDaExtensao[1];
+
+		// Coleta o local onde o arquivo esta localizado
+		String[] diretoriosArquivo = localAbsolutoArquivo.split(Pattern.quote("\\"));
+		String parte1 = diretoriosArquivo[0];
+		String parte2 = diretoriosArquivo[1];
+		String parte3 = diretoriosArquivo[2];
+		String parte4 = diretoriosArquivo[3];
+		String parte5 = diretoriosArquivo[4];
+		String diretorioRaiz = parte1 + "\\" + parte2 + "\\" + parte3 + "\\" + parte4 + "\\";
+		String arquivoRedundancia = diretorioRaiz + arquivo + "_" + "Redundancia" + "." + extensao;
+
+		// Grava o arquivo
+		OutputStream os = new FileOutputStream(arquivoRedundancia);
 		for (int i = 0; i < vetorRedundancia.length; i++) {
 			os.write(vetorRedundancia[i]);
 		}
@@ -203,7 +318,8 @@ public class ManipularArquivo {
 			redundanciaInt[ndP] = temp;
 			ndP++;
 		}
-		//System.out.println("\n" + "Redundancia: " + "\n" + Arrays.toString(redundanciaInt));
+		// System.out.println("\n" + "Redundancia: " + "\n" +
+		// Arrays.toString(redundanciaInt));
 		System.out.println("Quantidade de simbolos de redundancia: " + redundanciaInt.length);
 		return redundanciaInt;
 	}
@@ -212,7 +328,8 @@ public class ManipularArquivo {
 		for (int x = dados.length - tamanhoParidade; x < dados.length; x++) {
 			dados[x] = 0;
 		}
-		//System.out.println("\n" + "Novo vetor de dados com a redundancia zerada: " + "\n" + Arrays.toString(dados));
+		// System.out.println("\n" + "Novo vetor de dados com a redundancia zerada: " +
+		// "\n" + Arrays.toString(dados));
 		System.out.println("Quantidade de simbolos: " + dados.length);
 		return dados;
 	}
@@ -228,7 +345,7 @@ public class ManipularArquivo {
 			dados[x] = corrupcao[l];
 			l++;
 		}
-		//System.out.println("\n" + "Corrupcao: " + "\n" + Arrays.toString(dados));
+		// System.out.println("\n" + "Corrupcao: " + "\n" + Arrays.toString(dados));
 		System.out.println("Quantidade de simbolos: " + dados.length);
 	}
 
@@ -239,22 +356,18 @@ public class ManipularArquivo {
 			dados[x] = vetorRedundancia[k];
 			k++;
 		}
-		//System.out.println("\n" + "Vetor de dados concatenado com redundancia: " + "\n" + Arrays.toString(dados));
+		// System.out.println("\n" + "Vetor de dados concatenado com redundancia: " +
+		// "\n" + Arrays.toString(dados));
 		System.out.println("Quantidade de simbolos: " + dados.length);
 	}
-	
-	//Arrays sao imutaveis, uma vez criados o seu tamanho NAO pode ser alterado, portanto, o metodo abaixo nao funciona
+
+	// Arrays sao imutaveis, uma vez criados o seu tamanho NAO pode ser alterado,
+	// portanto, o metodo abaixo nao funciona
 	/*
-	public static byte[] apagaParidade(byte[] dados, int qtdSimbolosParidade) {
-		byte[] dadoSemParidade = new byte[dados.length - qtdSimbolosParidade];
-		byte temp = 0;
-		int ndP = 0;
-		for (int x = 0; x < dados.length; x++) {
-			temp = dados[x];
-			dadoSemParidade[ndP] = temp;
-			ndP++;
-		}		
-		return dadoSemParidade;
-	}*/
+	 * public static byte[] apagaParidade(byte[] dados, int qtdSimbolosParidade) {
+	 * byte[] dadoSemParidade = new byte[dados.length - qtdSimbolosParidade]; byte
+	 * temp = 0; int ndP = 0; for (int x = 0; x < dados.length; x++) { temp =
+	 * dados[x]; dadoSemParidade[ndP] = temp; ndP++; } return dadoSemParidade; }
+	 */
 
 }
