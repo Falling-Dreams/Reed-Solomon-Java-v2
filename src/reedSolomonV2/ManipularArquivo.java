@@ -16,6 +16,8 @@ import java.util.regex.Pattern;
 	TODO: Concatenar o vetor de redundancia com o vetor de dados
 
 	TODO: Corromper x posicoes do vetor de dados e guardar o arquivo
+	
+	TODO: Concatenar o o valor em bits dois bytes
  */
 
 public class ManipularArquivo {
@@ -73,13 +75,6 @@ public class ManipularArquivo {
 		ManipularArquivo.gravaArquivoDecodificado(decodificado, localAbsoluto);
 	}
 
-	// Gravar os bytes de um arquivo em um vetor de bytes
-	private static byte[] lerBytesArquivo(String fileName) throws IOException {
-		Path path = Paths.get(fileName);
-		byte[] data = Files.readAllBytes(path);
-		return data;
-	}
-
 	// Transformar os bytes de um arquivo lido de SIGNED [-128 a 127] em UNSIGNED [0
 	// a 255] e escrever em um vetor de inteiros
 	// e acrescentar n-k posicoes no vetor devolvido, pois, o bloco n do RS e
@@ -112,31 +107,15 @@ public class ManipularArquivo {
 	// Transformar os bytes de um arquivo lido de SIGNED [-128 a 127] em UNSIGNED [0
 	// a 255] e escrever em um vetor de inteiros
 	// Usar esse metodos para as demais conversoes que nao a primeira
-	private static int[] byteSignedParaUnsignedSemParidade(String localAbsolutoArquivo) throws IOException {
+	private static int[] byteSignedParaUnsignedSemParidade(String localAbsoluto) throws IOException {
 
-		File f = new File(localAbsolutoArquivo);
-		// Recupera nome e extensao do arquivo
-		String arquivoComExtensao = "";
-		int in = f.getAbsolutePath().lastIndexOf("\\");
-		if (in > -1) {
-			arquivoComExtensao = f.getAbsolutePath().substring(in + 1);
-		}
-		// Separa nome e extensao do arquivo
-		String[] separaNomeDaExtensao = arquivoComExtensao.split("[.]");
-		String arquivo = separaNomeDaExtensao[0];
-		String extensao = separaNomeDaExtensao[1];
+		String[] diretorioArquivoExtensao = recuperoDiretorioNomeExtensao(localAbsoluto);
+		String diretorio = diretorioArquivoExtensao[0];
+		String arquivo = diretorioArquivoExtensao[1];
+		String extensao = diretorioArquivoExtensao[2];
+		String arquivoCompleto = diretorio + arquivo + "_" + "Codificado" + "." + extensao;
 
-		// Coleta o local onde o arquivo esta localizado
-		String[] separaDiretoriosArquivo = localAbsolutoArquivo.split(Pattern.quote("\\"));
-		String parte1 = separaDiretoriosArquivo[0];
-		String parte2 = separaDiretoriosArquivo[1];
-		String parte3 = separaDiretoriosArquivo[2];
-		String parte4 = separaDiretoriosArquivo[3];
-		String parte5 = separaDiretoriosArquivo[4];
-		String diretorioRaiz = parte1 + "\\" + parte2 + "\\" + parte3 + "\\" + parte4 + "\\";
-		String arquivoCodificado = diretorioRaiz + arquivo + "_" + "Codificado" + "." + extensao;
-
-		Path path = Paths.get(arquivoCodificado);
+		Path path = Paths.get(arquivoCompleto);
 		byte[] bytesArquivoLido = Files.readAllBytes(path);
 		int tamanhoVetorInt = bytesArquivoLido.length;
 		int valorEmIntDoByte = 0;
@@ -187,28 +166,14 @@ public class ManipularArquivo {
 		return valorDoByteEmInt;
 	}
 
-	// Gravar um arquivo
-	private static File gravaArquivo(byte[] convertidoDeIntArray, String localAbsolutoArquivo, String nomeDoArquivo)
-			throws IOException {
-		File f = new File(localAbsolutoArquivo);
-		// Recupera nome e extensao do arquivo
-		String extensao = "";
-		int in = f.getAbsolutePath().lastIndexOf("\\");
-		if (in > -1) {
-			extensao = f.getAbsolutePath().substring(in + 1);
-		}
-		// Grava o arquivo com o nome fornecido e a extensao lida
-		File newFile = new File(nomeDoArquivo + "." + extensao);
-		FileOutputStream stream = new FileOutputStream(newFile);
-		stream.write(convertidoDeIntArray);
-		stream.close();
-		return newFile;
-	}
-
-	// Gravar codificado
-	private static File gravaArquivoCodificado(byte[] arquivoCodificado, String localAbsolutoArquivo)
-			throws IOException {
-		File f = new File(localAbsolutoArquivo);
+	// Recupera nome e local de um arquivo a partir do local absoluto
+	// Entrada: string representando o local absoluto
+	// Retorno: Um vetor de strings, cuja posicao [0] eh o local onde este arquivo
+	// esta gravado no disco
+	// [1] eh o nome do arquivo e a posicao [2] eh a extensao do arquivo sem ponto
+	// Recuperar local independente de quantas pastas existam
+	private static String[] recuperoDiretorioNomeExtensao(String localAbsoluto) {
+		File f = new File(localAbsoluto);
 
 		// Recupera nome e extensao do arquivo
 		String arquivoComExtensao = "";
@@ -216,23 +181,36 @@ public class ManipularArquivo {
 		if (in > -1) {
 			arquivoComExtensao = f.getAbsolutePath().substring(in + 1);
 		}
+		// Recupera o diretorio onde o arquivo esta armazenado
+		String diretorio = localAbsoluto.replace(arquivoComExtensao, "");
 
-		// Separa nome e extensao do arquivo
+		// Recupera nome e extensao do arquivo
 		String[] separaNomeDaExtensao = arquivoComExtensao.split("[.]");
 		String arquivo = separaNomeDaExtensao[0];
 		String extensao = separaNomeDaExtensao[1];
 
-		// Coleta o local onde o arquivo esta localizado
-		String[] diretoriosArquivo = localAbsolutoArquivo.split(Pattern.quote("\\"));
-		String parte1 = diretoriosArquivo[0];
-		String parte2 = diretoriosArquivo[1];
-		String parte3 = diretoriosArquivo[2];
-		String parte4 = diretoriosArquivo[3];
-		String parte5 = diretoriosArquivo[4];
-		String diretorioRaiz = parte1 + "\\" + parte2 + "\\" + parte3 + "\\" + parte4 + "\\";
+		// Armazena diretorio, nome do arquivo e extensao do arquivo em um array de
+		// strings
+		String[] diretorioArquivoExtensao = new String[3];
+		diretorioArquivoExtensao[0] = diretorio;
+		diretorioArquivoExtensao[1] = arquivo;
+		diretorioArquivoExtensao[2] = extensao;
+
+		return diretorioArquivoExtensao;
+	}
+
+	// Gravar codificado
+	private static File gravaArquivoCodificado(byte[] arquivoCodificado, String localAbsoluto)
+			throws IOException {
+
+		String[] diretorioArquivoExtensao = recuperoDiretorioNomeExtensao(localAbsoluto);
+		String diretorio = diretorioArquivoExtensao[0];
+		String arquivo = diretorioArquivoExtensao[1];
+		String extensao = diretorioArquivoExtensao[2];
+		String arquivoCompleto = diretorio + arquivo + "_" + "Codificado" + "." + extensao;
 
 		// Grava o arquivo com o nome fornecido e a extensao lida
-		File newFile = new File(diretorioRaiz + arquivo + "_" + "Codificado" + "." + extensao);
+		File newFile = new File(arquivoCompleto);
 		FileOutputStream stream = new FileOutputStream(newFile);
 		stream.write(arquivoCodificado);
 		stream.close();
@@ -240,33 +218,17 @@ public class ManipularArquivo {
 	}
 
 	// Gravar decodificado
-	private static File gravaArquivoDecodificado(byte[] arquivoDecodificado, String localAbsolutoArquivo)
+	private static File gravaArquivoDecodificado(byte[] arquivoDecodificado, String localAbsoluto)
 			throws IOException {
-		File f = new File(localAbsolutoArquivo);
-
-		// Recupera nome e extensao do arquivo
-		String arquivoComExtensao = "";
-		int in = f.getAbsolutePath().lastIndexOf("\\");
-		if (in > -1) {
-			arquivoComExtensao = f.getAbsolutePath().substring(in + 1);
-		}
-
-		// Separa nome e extensao do arquivo
-		String[] separaNomeDaExtensao = arquivoComExtensao.split("[.]");
-		String arquivo = separaNomeDaExtensao[0];
-		String extensao = separaNomeDaExtensao[1];
-
-		// Coleta o local onde o arquivo esta localizado
-		String[] diretoriosArquivo = localAbsolutoArquivo.split(Pattern.quote("\\"));
-		String parte1 = diretoriosArquivo[0];
-		String parte2 = diretoriosArquivo[1];
-		String parte3 = diretoriosArquivo[2];
-		String parte4 = diretoriosArquivo[3];
-		String parte5 = diretoriosArquivo[4];
-		String diretorioRaiz = parte1 + "\\" + parte2 + "\\" + parte3 + "\\" + parte4 + "\\";
+		
+		String[] diretorioArquivoExtensao = recuperoDiretorioNomeExtensao(localAbsoluto);
+		String diretorio = diretorioArquivoExtensao[0];
+		String arquivo = diretorioArquivoExtensao[1];
+		String extensao = diretorioArquivoExtensao[2];
+		String arquivoCompleto = diretorio + arquivo + "_" + "Decodificado" + "." + extensao;
 
 		// Grava o arquivo com o nome fornecido e a extensao lida
-		File newFile = new File(diretorioRaiz + arquivo + "_" + "Decodificado" + "." + extensao);
+		File newFile = new File(arquivoCompleto);
 		FileOutputStream stream = new FileOutputStream(newFile);
 		stream.write(arquivoDecodificado);
 		stream.close();
@@ -274,34 +236,16 @@ public class ManipularArquivo {
 	}
 
 	// Gravar a redundancia em um arquivo
-	private static void gravarRedundancia(int[] vetorRedundancia, String localAbsolutoArquivo) throws IOException {
+	private static void gravarRedundancia(int[] vetorRedundancia, String localAbsoluto) throws IOException {
 
-		File f = new File(localAbsolutoArquivo);
-
-		// Recupera nome e extensao do arquivo
-		String arquivoComExtensao = "";
-		int in = f.getAbsolutePath().lastIndexOf("\\");
-		if (in > -1) {
-			arquivoComExtensao = f.getAbsolutePath().substring(in + 1);
-		}
-
-		// Separa nome e extensao do arquivo
-		String[] separaNomeDaExtensao = arquivoComExtensao.split("[.]");
-		String arquivo = separaNomeDaExtensao[0];
-		String extensao = separaNomeDaExtensao[1];
-
-		// Coleta o local onde o arquivo esta localizado
-		String[] diretoriosArquivo = localAbsolutoArquivo.split(Pattern.quote("\\"));
-		String parte1 = diretoriosArquivo[0];
-		String parte2 = diretoriosArquivo[1];
-		String parte3 = diretoriosArquivo[2];
-		String parte4 = diretoriosArquivo[3];
-		String parte5 = diretoriosArquivo[4];
-		String diretorioRaiz = parte1 + "\\" + parte2 + "\\" + parte3 + "\\" + parte4 + "\\";
-		String arquivoRedundancia = diretorioRaiz + arquivo + "_" + "Redundancia" + "." + extensao;
+		String[] diretorioArquivoExtensao = recuperoDiretorioNomeExtensao(localAbsoluto);
+		String diretorio = diretorioArquivoExtensao[0];
+		String arquivo = diretorioArquivoExtensao[1];
+		String extensao = diretorioArquivoExtensao[2];	
+		String arquivoCompleto = diretorio + arquivo + "_" + "Redundancia" + "." + extensao;
 
 		// Grava o arquivo
-		OutputStream os = new FileOutputStream(arquivoRedundancia);
+		OutputStream os = new FileOutputStream(arquivoCompleto);
 		for (int i = 0; i < vetorRedundancia.length; i++) {
 			os.write(vetorRedundancia[i]);
 		}
@@ -334,6 +278,7 @@ public class ManipularArquivo {
 		return dados;
 	}
 
+	// Corromper vetor de dados t posicoes
 	private static void corrompeDado(byte[] dados, int t) {
 		// Vetor de bytes com SecureRandom de tamanho t
 		SecureRandom random = new SecureRandom();
@@ -349,6 +294,7 @@ public class ManipularArquivo {
 		System.out.println("Quantidade de simbolos: " + dados.length);
 	}
 
+	// Concatena dado com redundancia
 	public static void concatenaDadoComRedundancia(int[] dados, int[] vetorRedundancia, int tamanhoParidade) {
 		// Concatenando dado com redudancia
 		int k = 0;
@@ -360,10 +306,25 @@ public class ManipularArquivo {
 		// "\n" + Arrays.toString(dados));
 		System.out.println("Quantidade de simbolos: " + dados.length);
 	}
-
-	// Arrays sao imutaveis, uma vez criados o seu tamanho NAO pode ser alterado,
-	// portanto, o metodo abaixo nao funciona
 	/*
+	 * // Gravar os bytes de um arquivo em um vetor de bytes private static byte[]
+	 * lerBytesArquivo(String fileName) throws IOException { Path path =
+	 * Paths.get(fileName); byte[] data = Files.readAllBytes(path); return data; }
+	 * 
+	 * 
+	 * // Gravar um arquivo private static File gravaArquivo(byte[]
+	 * convertidoDeIntArray, String localAbsolutoArquivo, String nomeDoArquivo)
+	 * throws IOException { File f = new File(localAbsolutoArquivo); // Recupera
+	 * nome e extensao do arquivo String extensao = ""; int in =
+	 * f.getAbsolutePath().lastIndexOf("\\"); if (in > -1) { extensao =
+	 * f.getAbsolutePath().substring(in + 1); } // Grava o arquivo com o nome
+	 * fornecido e a extensao lida File newFile = new File(nomeDoArquivo + "." +
+	 * extensao); FileOutputStream stream = new FileOutputStream(newFile);
+	 * stream.write(convertidoDeIntArray); stream.close(); return newFile; }
+	 * 
+	 * // Arrays sao imutaveis, uma vez criados o seu tamanho NAO pode ser alterado,
+	 * // portanto, o metodo abaixo nao funciona
+	 * 
 	 * public static byte[] apagaParidade(byte[] dados, int qtdSimbolosParidade) {
 	 * byte[] dadoSemParidade = new byte[dados.length - qtdSimbolosParidade]; byte
 	 * temp = 0; int ndP = 0; for (int x = 0; x < dados.length; x++) { temp =
