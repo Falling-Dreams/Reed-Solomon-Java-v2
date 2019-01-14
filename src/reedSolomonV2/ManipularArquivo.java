@@ -306,6 +306,80 @@ public class ManipularArquivo {
 		// "\n" + Arrays.toString(dados));
 		System.out.println("Quantidade de simbolos: " + dados.length);
 	}
+	
+	public static int[][] byteParaBitUnsigned(String fileName)throws IOException{
+		Path path = Paths.get(fileName);
+		byte[] data = Files.readAllBytes(path);
+		int size = data.length;
+		System.out.println("Tamanho do arquivo: " + size + " bytes");
+		
+		int r[] = new int[8];
+		int q[] = new int[8];
+		int bin[] = new int[8];
+		int j, l, num_input;
+		
+		int arrayBits[][] = new int[size][8];
+		int m = 0;
+
+		for (int i = 0; i < size; i++) {
+			// Se o valor em inteiro do byte for maior ou igual a zero, nao precisa somar 256
+			if (data[i] >= 0) {
+				// Mostra em Unsigned Bytes
+				// System.out.println("\nByte: " + data[i]); 
+				num_input = data[i];
+				// preenche o vetor com valores binarios
+				for (j = 0; j <= 7; j++) { 
+					q[j] = num_input / 2;
+					r[j] = num_input % 2;
+					num_input = q[j];
+				}
+				// organiza o vetor de tras para frente (MSB)
+				int k = 7;
+				for (j = 0; j <= 7; j++) {
+					bin[k] = r[j];
+					k--;
+				}
+				// imprime o valor binario do byte em MSB
+				System.out.println("Bits de Dados:      ");
+				for (l = 0; l <= 7; l++) {
+					System.out.print(bin[l]);					
+				}
+				System.out.println("\n");
+				for (l = 0; l <= 7; l++) {
+					arrayBits[i][l] = bin[l];
+					
+				}
+				
+			} else {
+				num_input = data[i];
+				num_input = num_input + 256;
+				// System.out.println("\nByte: " + num_input); // Mostra em Unsigned Bytes
+				// preenche o vetor com valores binarios
+				for (j = 0; j <= 7; j++) { 
+					q[j] = num_input / 2;
+					r[j] = num_input % 2;
+					num_input = q[j];
+				}
+				// organiza o vetor de tras para frente
+				int k = 7;
+				for (j = 0; j <= 7; j++) {
+					bin[k] = r[j];
+					k--;
+				}
+				System.out.println("Bits de Dados:      ");
+				for (l = 0; l <= 7; l++) {
+					System.out.print(bin[l]);
+				}
+				System.out.println("\n");
+				for (l = 0; l <= 7; l++) {
+					arrayBits[i][l] = bin[l];
+					
+				}
+			}
+		}
+		
+		return arrayBits;
+	}
 	/*
 	 * // Gravar os bytes de um arquivo em um vetor de bytes private static byte[]
 	 * lerBytesArquivo(String fileName) throws IOException { Path path =
