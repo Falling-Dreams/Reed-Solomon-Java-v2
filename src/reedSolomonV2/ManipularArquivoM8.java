@@ -5,74 +5,109 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.SecureRandom;
 import java.nio.file.Path;
-import java.util.*;
-import java.util.regex.Pattern;
 
 /*
- * 	TODO: Percorrer o vetor de dados e guardar a redundancia
+		TODO: Percorrer o vetor de dados e guardar a redundancia
+		
+		TODO: Metodo para verificar se o resultado de uma divisao gerou um numero inteiro ou nao
+		
+		TODO: Rotina de codificacao/decodificacao conforme o tamanho do arquivo, cada iteracao sera de 255 simbolos
+		
+		TODO: Caso a QTD_ITERACOES nao seja um numero inteiro e preciso acrescentar uma iteracao adicional
+		
+		TODO: Tratar o caso em que uma iteracao seja suficiente
+		
+		TODO: E preciso guardar a redundancia de cada iteracao e ao final concatena-la ao vetor de dado
+		
+		TODO: Dividir o arquivo em vetores de 255 posicoes
+ 
+        Para m=8:
+        Parâmetro 1 --> Default Primitive Polynomial=D^8 + D^4 + D^3 + D^2 + 1; Integer Representation=285.
+        Parâmetro 2 --> n=2^m = 256
+        n=200; k=120; n-k=80; t=40;
+        
+        RS para m=8:
+        Com 5% de erro:
+        0.1*255 = 255-k
+        k=229 Bytes
+        n-k=26 Bytes de redundância
+        
+        Com 10% de erro:
+        0.2*255 = 255-k
+        k=203 Bytes
+        n-k=52 Bytes de redundância
+        
+        Com 15% de erro:
+        0.3*255 = 255-k
+        k=177 Bytes
+        n-k=78 Bytes de redundância
 
-	TODO: Corromper n-k posicoes do vetor de dados
-
-	TODO: Concatenar o vetor de redundancia com o vetor de dados
-
-	TODO: Corromper x posicoes do vetor de dados e guardar o arquivo
-	
-	TODO: Concatenar o o valor em bits dois bytes
  */
 
-public class ManipularArquivo {
+public class ManipularArquivoM8 {
 
 	public static void main(String[] args) throws IOException, ReedSolomonException {
 
-		// k=2301; n=2501; n-k=200; t=100
-		// Codificado ainda continua legivel pelo windows
-		String localAbsoluto = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\GPEs em atividade.pdf";
-		ManipularArquivo.degradacaoCorretiva(localAbsoluto);
+		String localAbsoluto = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\Novo Documento de Texto.txt";
+		ManipularArquivoM8.degradacaoCorretiva(localAbsoluto);
 	}
 
 	// Cria os arquivos codificado e redundancia. Corrompe original
 	private static void degradacaoCorretiva(String localAbsoluto) throws IOException, ReedSolomonException {
-		GenericGF gf = new GenericGF(69643, 65536, 1);
-		int qtdSimbolosParidade = 200;
-		int t = 100;
+		
+        // Com 15% de erro: k=177 Bytes n-k=78 Bytes de redundância t=39
+		int n = 255, k = 177, i;
+		Path path = Paths.get(localAbsoluto);
+		byte[] dado = Files.readAllBytes(path);
+		int qtdSimbolos = dado.length;
+		final int QTD_ITERACOES = qtdSimbolos/k + 1;
+		
+		for(int h = 1; h <= QTD_ITERACOES; h++) {
+		//Dividir e armazenar o arquivo em vetores de 255 posicoes		
+     
+		GenericGF gf = new GenericGF(285,256, 1);
+		int qtdSimbolosParidade = 78;
+		int t = 39;
 
 		// Transforma vetor de bytes em vetor de inteiros unsigned
-		int[] arquivo = ManipularArquivo.byteSignedParaUnsigned(localAbsoluto, qtdSimbolosParidade);
+		int[] arquivo = ManipularArquivoM8.byteSignedParaUnsigned(localAbsoluto, qtdSimbolosParidade);
 
 		// Codificacao e vetor da redundancia
 		ReedSolomonEncoder encoder = new ReedSolomonEncoder(gf);
 		encoder.encode(arquivo, qtdSimbolosParidade);
-		int[] vetorParidade = ManipularArquivo.salvaVetorRedundancia(arquivo, qtdSimbolosParidade);
+		int[] vetorParidade = ManipularArquivoM8.salvaVetorRedundancia(arquivo, qtdSimbolosParidade);
 
 		// Apaga redundancia
-		ManipularArquivo.zerarRedundancia(arquivo, qtdSimbolosParidade);
+		ManipularArquivoM8.zerarRedundancia(arquivo, qtdSimbolosParidade);
 
 		// Transformar de int[] para byte[]
-		byte[] codificado = ManipularArquivo.byteUnsignedParaSigned(arquivo);
+		byte[] codificado = ManipularArquivoM8.byteUnsignedParaSigned(arquivo);
 
 		// Guardar a redundancia em um arquivo sem converter de int[] para byte[]
-		ManipularArquivo.gravarRedundancia(vetorParidade, localAbsoluto);
+		ManipularArquivoM8.gravarRedundancia(vetorParidade, localAbsoluto);
 
 		// Cria vetor de bytes ja codificados pelo encoder e corrompido t posicoes
-		ManipularArquivo.corrompeDado(codificado, t);
+		ManipularArquivoM8.corrompeDado(codificado, t);
 
 		// Gravar arquivo codificado e corrompido
-		ManipularArquivo.gravaArquivoCodificado(codificado, localAbsoluto);
+		ManipularArquivoM8.gravaArquivoCodificado(codificado, localAbsoluto);
 
 		// Transformar de byte[] para int[] guardar arquivo corrompido
-		int[] voltaDeByte = ManipularArquivo.byteSignedParaUnsignedSemParidade(localAbsoluto);
+		int[] voltaDeByte = ManipularArquivoM8.byteSignedParaUnsignedSemParidade(localAbsoluto);
 
 		// Decodificacao
 		ReedSolomonDecoder decoder = new ReedSolomonDecoder(gf);
 
 		// Concatenando dado com redudancia
-		ManipularArquivo.concatenaDadoComRedundancia(voltaDeByte, vetorParidade, qtdSimbolosParidade);
+		ManipularArquivoM16.concatenaDadoComRedundancia(voltaDeByte, vetorParidade, qtdSimbolosParidade);
 		decoder.decode(voltaDeByte, qtdSimbolosParidade);
 
 		// gravo o arquivo decodificado com o mesmo tamanho do arquivo original, sem os
 		// indices de paridade
-		byte[] decodificado = ManipularArquivo.byteUnsignedParaSigned(voltaDeByte);
-		ManipularArquivo.gravaArquivoDecodificado(decodificado, localAbsoluto);
+		byte[] decodificado = ManipularArquivoM8.byteUnsignedParaSigned(voltaDeByte);		
+		ManipularArquivoM8.gravaArquivoDecodificado(decodificado, localAbsoluto);
+		
+		}
 	}
 
 	// Transformar os bytes de um arquivo lido de SIGNED [-128 a 127] em UNSIGNED [0

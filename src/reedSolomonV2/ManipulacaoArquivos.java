@@ -16,27 +16,37 @@ import java.util.stream.IntStream;
 import org.apache.commons.lang3.ArrayUtils;
 
 public class ManipulacaoArquivos {
+	
 
 	public static void main(String[] args) throws IOException {
 
-		String localAbsolutoArquivo = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\Novo Documento de Texto.txt";
+		String localAbsolutoArquivo = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\IEEE-Conference-A4-format.pdf";
+		final int K_MAX = 61440;		
 		Path path = Paths.get(localAbsolutoArquivo);
 		byte[] dado = Files.readAllBytes(path);
-		int	[][] vetorBinario = bitsArquivo(localAbsolutoArquivo);	
+		int qtdSimbolos = dado.length;
+		final int QTD_ITERACOES = qtdSimbolos/K_MAX;
 		
+		if(QTD_ITERACOES <= 1) {
+			//Caso em que a quantidade de simbolos é igual ou menor a 1, apenas uma iteracao
+			//Metodo ou classe para uma iteracao
+			System.out.println(QTD_ITERACOES);
+		}
+		else if(QTD_ITERACOES >= 1) {
+			//Quantidade de simbolos e superior a 61440, a rotina sera feita para cada 61440
+			//Metodo ou classe para mais de uma iteracao
+			System.out.println(QTD_ITERACOES);
+		}
+		
+		
+			
+		
+		/*
 		// Transforma o vetor de duas dimensoes em uma arraylist de uma dimensao
-		ArrayList<Integer[]> lista = new ArrayList<Integer[]>();
-		
-		Integer[] newArray = new Integer[vetorBinario.length];
-		
-		int i = 0;
-		for (int[] value : vetorBinario) {
-		    newArray[i++] = Integer.valueOf(value[]);
-		}		
-		  
-		
+		ArrayList<Integer[]> lista = new ArrayList<Integer[]>();		
+		Integer[] newArray = new Integer[vetorBinario.length];		
 		//System.out.println("2D para 1D: " + resultado);		
-		System.out.println("Depois da Concatenacao(A): " + Arrays.toString(newArray) + "\n");
+		System.out.println("Depois da Concatenacao(A): " + Arrays.toString(newArray) + "\n"); */
 
 	}
 
