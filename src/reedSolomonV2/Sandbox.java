@@ -11,45 +11,34 @@ public class Sandbox {
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
 		
-		String localAbsolutoArquivo = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\Q6_v2.txt";			
+		String localAbsolutoArquivo = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\aula11contabcespe.pdf";			
 		Path path = Paths.get(localAbsolutoArquivo);
 		byte[] bytesArquivo = Files.readAllBytes(path);
 		int qtdSimbolosArquivo = bytesArquivo.length;
 		int n = 255, k = 177;
 		int qtdIteracoesRS8 = qtdSimbolosArquivo/k + 1;
 		int num_input;
-	    int NumRS[]=new int[qtdSimbolosArquivo]; //vetor que armazena os bytes convertidos em unsigned
-	    int contador = 0;
+		int corteVetorComeco = 0;
+	    int corteVetorFinal = 176;
 	    
-        int[] data = new int[] {54,65,102,187,175,78,214,125,175,2,47,39,85,67,17,97,178,136,194,201,217,7,96,81,78,228,
-        250,21,247,108,54,65,102,187,175,78,214,125,175,2,47,39,85,67,17,97,178,136,194,201,217,7,96,81,78,228,250,21,247,
-        108,54,65,102,187,175,78,214,125,175,2,47,39,85,67,17,97,178,136,194,201,217,7,96,81,78,228,250,21,247,108,54,65,102,
-        187,175,78,214,125,175,2,47,39,85,67,17,97,178,136,194,201,217,7,96,81,78,228,250,21,247,108};
-        
-        int[][] resultado = Sandbox.splitArray(data, 4);
-        		
-        System.out.println(Arrays.toString(resultado));
 	    
-;
-	 
-		/*
-        for(int i = 0; i < qtdSimbolosArquivo; i++){ // A saida tera numeros negativos pq em Java byte é signed!
-            //System.out.println("\nValor i: "+i);
-            if (bytesArquivo[i]>=0){
-                //System.out.println("\nByte: " +ByteArquivo[i]); // Mostra em Unsigned Bytes
-                num_input=bytesArquivo[i];
-                NumRS[i]=num_input;
-                System.out.println("\nNum " +i + ": " +NumRS[i]); // Mostra em Unsigned Bytes
-            }else{
-                //System.out.println("\nByte: " +ByteArquivo[i]); // Mostra em Unsigned Bytes
-                num_input=bytesArquivo[i];
-                num_input=num_input+256;
-                NumRS[i]=num_input;
-                System.out.println("\nNum " +i + ": " +NumRS[i]); // Mostra em Unsigned Bytes
-            }
-        }*/
+        byte[] novoVetor = Sandbox.subVetor(bytesArquivo);
         
-
+        System.out.println(Arrays.toString(novoVetor));
+          
+	    
+        
+	}
+	
+	
+	public static byte[] subVetor(byte[] vetor) {
+		int vetorComeco = 0;
+	    int vetorFinal = 177;
+	    
+	    byte[] vetorCortado = new byte[255];
+	    System.arraycopy(vetor, 0, vetorCortado, 0, 177);
+		
+		return vetorCortado;
 	}
 	
 	public static int[][] splitArray(int[] arrayToSplit, int chunkSize){

@@ -4,6 +4,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.nio.file.Path;
 
 /*
@@ -54,59 +55,62 @@ public class ManipularArquivoM8 {
 
 	// Cria os arquivos codificado e redundancia. Corrompe original
 	private static void degradacaoCorretiva(String localAbsoluto) throws IOException, ReedSolomonException {
-		
-        // Com 15% de erro: k=177 Bytes n-k=78 Bytes de redundância t=39
-		int n = 255, k = 177, i;
+
+		// Com 15% de erro: k=177 Bytes n-k=78 Bytes de redundância t=39
+		int n = 255, k = 177, t = 39, qtdSimbolosCorrecao = 78, i;
+		int srcPos = 0;
 		Path path = Paths.get(localAbsoluto);
 		byte[] dado = Files.readAllBytes(path);
 		int qtdSimbolos = dado.length;
-		final int QTD_ITERACOES = qtdSimbolos/k + 1;
-		
-		for(int h = 1; h <= QTD_ITERACOES; h++) {
-		//Dividir e armazenar o arquivo em vetores de 255 posicoes		
-     
-		GenericGF gf = new GenericGF(285,256, 1);
-		int qtdSimbolosParidade = 78;
-		int t = 39;
-
+		int qtdIteracoesRS = qtdSimbolos/k ;
 		// Transforma vetor de bytes em vetor de inteiros unsigned
-		int[] arquivo = ManipularArquivoM8.byteSignedParaUnsigned(localAbsoluto, qtdSimbolosParidade);
+		int[] arquivo = ManipularArquivoM8.byteSignedParaUnsigned(localAbsoluto, qtdSimbolosCorrecao); 
 
-		// Codificacao e vetor da redundancia
-		ReedSolomonEncoder encoder = new ReedSolomonEncoder(gf);
-		encoder.encode(arquivo, qtdSimbolosParidade);
-		int[] vetorParidade = ManipularArquivoM8.salvaVetorRedundancia(arquivo, qtdSimbolosParidade);
+		for (int h = 0; h < qtdIteracoesRS; h++) {
+			// Dividir e armazenar o arquivo em vetores de 255 posicoes
+			int[] vetorRS8 = new int[255];
+			System.arraycopy(arquivo, srcPos, vetorRS8, 0, k + 1);
+			srcPos += 177;
 
-		// Apaga redundancia
-		ManipularArquivoM8.zerarRedundancia(arquivo, qtdSimbolosParidade);
+			GenericGF gf = new GenericGF(285, 256, 1);			
 
-		// Transformar de int[] para byte[]
-		byte[] codificado = ManipularArquivoM8.byteUnsignedParaSigned(arquivo);
+			// Codificacao e vetor da redundancia
+			ReedSolomonEncoder encoder = new ReedSolomonEncoder(gf);
+			encoder.encode(vetorRS8, qtdSimbolosCorrecao);
+			int[] vetorParidade = ManipularArquivoM8.salvaVetorRedundancia(vetorRS8, qtdSimbolosCorrecao);	
 
-		// Guardar a redundancia em um arquivo sem converter de int[] para byte[]
-		ManipularArquivoM8.gravarRedundancia(vetorParidade, localAbsoluto);
+			// Apaga redundancia
+			ManipularArquivoM8.zerarRedundancia(vetorRS8, qtdSimbolosCorrecao);
 
-		// Cria vetor de bytes ja codificados pelo encoder e corrompido t posicoes
-		ManipularArquivoM8.corrompeDado(codificado, t);
+			// Transformar de int[] para byte[]
+			byte[] codificado = ManipularArquivoM8.byteUnsignedParaSigned(vetorRS8);
 
-		// Gravar arquivo codificado e corrompido
-		ManipularArquivoM8.gravaArquivoCodificado(codificado, localAbsoluto);
+			// Guardar a redundancia em um arquivo sem converter de int[] para byte[]
+			ManipularArquivoM8.gravarRedundancia(vetorParidade, localAbsoluto);
+			
 
-		// Transformar de byte[] para int[] guardar arquivo corrompido
-		int[] voltaDeByte = ManipularArquivoM8.byteSignedParaUnsignedSemParidade(localAbsoluto);
+			// Cria vetor de bytes ja codificados pelo encoder e corrompido t posicoes
+			ManipularArquivoM8.corrompeDado(codificado, t);
 
-		// Decodificacao
-		ReedSolomonDecoder decoder = new ReedSolomonDecoder(gf);
+			// Gravar arquivo codificado e corrompido
+			ManipularArquivoM8.gravaArquivoCodificado(codificado, localAbsoluto);
+			
+			/*
+			// Transformar de byte[] para int[] guardar arquivo corrompido
+			int[] voltaDeByte = ManipularArquivoM8.byteSignedParaUnsignedSemParidade(localAbsoluto);
 
-		// Concatenando dado com redudancia
-		ManipularArquivoM16.concatenaDadoComRedundancia(voltaDeByte, vetorParidade, qtdSimbolosParidade);
-		decoder.decode(voltaDeByte, qtdSimbolosParidade);
+			// Decodificacao
+			ReedSolomonDecoder decoder = new ReedSolomonDecoder(gf);
 
-		// gravo o arquivo decodificado com o mesmo tamanho do arquivo original, sem os
-		// indices de paridade
-		byte[] decodificado = ManipularArquivoM8.byteUnsignedParaSigned(voltaDeByte);		
-		ManipularArquivoM8.gravaArquivoDecodificado(decodificado, localAbsoluto);
-		
+			// Concatenando dado com redudancia
+			ManipularArquivoM16.concatenaDadoComRedundancia(voltaDeByte, vetorParidade, qtdSimbolosCorrecao);
+			decoder.decode(voltaDeByte, qtdSimbolosCorrecao);
+
+			// gravo o arquivo decodificado com o mesmo tamanho do arquivo original, sem os
+			// indices de paridade
+			byte[] decodificado = ManipularArquivoM8.byteUnsignedParaSigned(voltaDeByte);
+			ManipularArquivoM8.gravaArquivoDecodificado(decodificado, localAbsoluto);*/
+			
 		}
 	}
 
@@ -235,8 +239,7 @@ public class ManipularArquivoM8 {
 	}
 
 	// Gravar codificado
-	private static File gravaArquivoCodificado(byte[] arquivoCodificado, String localAbsoluto)
-			throws IOException {
+	private static File gravaArquivoCodificado(byte[] arquivoCodificado, String localAbsoluto) throws IOException {
 
 		String[] diretorioArquivoExtensao = recuperoDiretorioNomeExtensao(localAbsoluto);
 		String diretorio = diretorioArquivoExtensao[0];
@@ -253,9 +256,8 @@ public class ManipularArquivoM8 {
 	}
 
 	// Gravar decodificado
-	private static File gravaArquivoDecodificado(byte[] arquivoDecodificado, String localAbsoluto)
-			throws IOException {
-		
+	private static File gravaArquivoDecodificado(byte[] arquivoDecodificado, String localAbsoluto) throws IOException {
+
 		String[] diretorioArquivoExtensao = recuperoDiretorioNomeExtensao(localAbsoluto);
 		String diretorio = diretorioArquivoExtensao[0];
 		String arquivo = diretorioArquivoExtensao[1];
@@ -276,7 +278,7 @@ public class ManipularArquivoM8 {
 		String[] diretorioArquivoExtensao = recuperoDiretorioNomeExtensao(localAbsoluto);
 		String diretorio = diretorioArquivoExtensao[0];
 		String arquivo = diretorioArquivoExtensao[1];
-		String extensao = diretorioArquivoExtensao[2];	
+		String extensao = diretorioArquivoExtensao[2];
 		String arquivoCompleto = diretorio + arquivo + "_" + "Redundancia" + "." + extensao;
 
 		// Grava o arquivo
@@ -341,29 +343,30 @@ public class ManipularArquivoM8 {
 		// "\n" + Arrays.toString(dados));
 		System.out.println("Quantidade de simbolos: " + dados.length);
 	}
-	
-	public static int[][] byteParaBitUnsigned(String fileName)throws IOException{
+
+	public static int[][] byteParaBitUnsigned(String fileName) throws IOException {
 		Path path = Paths.get(fileName);
 		byte[] data = Files.readAllBytes(path);
 		int size = data.length;
 		System.out.println("Tamanho do arquivo: " + size + " bytes");
-		
+
 		int r[] = new int[8];
 		int q[] = new int[8];
 		int bin[] = new int[8];
 		int j, l, num_input;
-		
+
 		int arrayBits[][] = new int[size][8];
 		int m = 0;
 
 		for (int i = 0; i < size; i++) {
-			// Se o valor em inteiro do byte for maior ou igual a zero, nao precisa somar 256
+			// Se o valor em inteiro do byte for maior ou igual a zero, nao precisa somar
+			// 256
 			if (data[i] >= 0) {
 				// Mostra em Unsigned Bytes
-				// System.out.println("\nByte: " + data[i]); 
+				// System.out.println("\nByte: " + data[i]);
 				num_input = data[i];
 				// preenche o vetor com valores binarios
-				for (j = 0; j <= 7; j++) { 
+				for (j = 0; j <= 7; j++) {
 					q[j] = num_input / 2;
 					r[j] = num_input % 2;
 					num_input = q[j];
@@ -377,20 +380,20 @@ public class ManipularArquivoM8 {
 				// imprime o valor binario do byte em MSB
 				System.out.println("Bits de Dados:      ");
 				for (l = 0; l <= 7; l++) {
-					System.out.print(bin[l]);					
+					System.out.print(bin[l]);
 				}
 				System.out.println("\n");
 				for (l = 0; l <= 7; l++) {
 					arrayBits[i][l] = bin[l];
-					
+
 				}
-				
+
 			} else {
 				num_input = data[i];
 				num_input = num_input + 256;
 				// System.out.println("\nByte: " + num_input); // Mostra em Unsigned Bytes
 				// preenche o vetor com valores binarios
-				for (j = 0; j <= 7; j++) { 
+				for (j = 0; j <= 7; j++) {
 					q[j] = num_input / 2;
 					r[j] = num_input % 2;
 					num_input = q[j];
@@ -408,11 +411,11 @@ public class ManipularArquivoM8 {
 				System.out.println("\n");
 				for (l = 0; l <= 7; l++) {
 					arrayBits[i][l] = bin[l];
-					
+
 				}
 			}
 		}
-		
+
 		return arrayBits;
 	}
 	/*

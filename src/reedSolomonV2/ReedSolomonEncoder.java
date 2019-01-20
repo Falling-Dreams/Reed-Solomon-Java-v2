@@ -58,8 +58,10 @@ public final class ReedSolomonEncoder {
 	      toEncode[dataBytes + i] = 0;
 	    }
 	    System.arraycopy(coefficients, 0, toEncode, dataBytes + numZeroCoefficients, coefficients.length);
+	    
+	    
 		//System.out.println("\n" + "Depois da codificacao: " + "\n" + Arrays.toString(toEncode));
-		System.out.println("Quantidade de simbolos: " + toEncode.length);
+		//System.out.println("Quantidade de simbolos: " + toEncode.length);
 	  }
 
 	}
