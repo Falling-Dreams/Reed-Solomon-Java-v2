@@ -58,32 +58,59 @@ public class ManipularArquivoM8 {
 
 		// Com 15% de erro: k=177 Bytes n-k=78 Bytes de redundância t=39
 		int n = 255, k = 177, t = 39, qtdSimbolosCorrecao = 78, i;
-		int srcPos = 0;
+		int srcPos = 0, srcPosCodi = 0, destPosCorr = 0;
 		Path path = Paths.get(localAbsoluto);
 		byte[] dado = Files.readAllBytes(path);
 		int qtdSimbolos = dado.length;
-		int qtdIteracoesRS = qtdSimbolos/k ;
-		// Transforma vetor de bytes em vetor de inteiros unsigned
-		int[] arquivo = ManipularArquivoM8.byteSignedParaUnsigned(localAbsoluto, qtdSimbolosCorrecao); 
+		int qtdIteracoesRS = qtdSimbolos/k + 1;		
+		int[] arquivo = ManipularArquivoM8.byteSignedParaUnsigned(localAbsoluto, qtdSimbolosCorrecao); // Transforma vetor de bytes em vetor de inteiros unsigned
+		int[] vetorRS8Codificado = new int[arquivo.length];
+		int[] vetorSimbolosCorrecao = new int[qtdIteracoesRS * qtdSimbolosCorrecao];		 
 
+		// Ignoro a ultima iteracao, os bytes do arquivo original que nao resulturam em uma divisao inteira
 		for (int h = 0; h < qtdIteracoesRS; h++) {
-			// Dividir e armazenar o arquivo em vetores de 255 posicoes
+			
+			// Dividir e armazenar o vetor do arquivo em vetores de 255 posicoes
+			// vetor de n simbolos de cada iteracao - OK FUNCIONANDO
 			int[] vetorRS8 = new int[255];
 			System.arraycopy(arquivo, srcPos, vetorRS8, 0, k + 1);
 			srcPos += 177;
-
+			
+			// Cria o corpo de Galois com o polinomio primitivo informado (representacao em inteiro)
 			GenericGF gf = new GenericGF(285, 256, 1);			
 
-			// Codificacao e vetor da redundancia
+			// Codificacao ocorre a cada 255 simbolos, 177 simbolos de informacao do arquivo original
+			// e 78 simbolos de correcao
 			ReedSolomonEncoder encoder = new ReedSolomonEncoder(gf);
 			encoder.encode(vetorRS8, qtdSimbolosCorrecao);
+			
+			// Vetor de simbolos de correcao de cada iteracao - OK FUNCIONANDO
+			int[] vetorCorrecaoRS8 = new int[78];
+			System.arraycopy(vetorRS8, k, vetorCorrecaoRS8, 0, (n-k));
+			//System.out.println(Arrays.toString(vetorCorrecaoRS8));
+			
+			// os k simbolos codificados pelo RS8 a cada iteracao sao armazenados em um unico vetor - PROBLEMA
+			System.arraycopy(vetorRS8, 0, vetorRS8Codificado, srcPosCodi, k + 1);
+			srcPosCodi += 177;
+			//System.out.println("\n" + Arrays.toString(vetorRS8Codificado));
+								
+			// os n-k simbolos de correcao codificados pelo RS8 sao armazenados em um unico vetor - PROBLEMA			
+			System.arraycopy(vetorCorrecaoRS8, 0, vetorSimbolosCorrecao, destPosCorr, qtdSimbolosCorrecao);
+			destPosCorr += 78;
+			//System.out.println("\n" + Arrays.toString(vetorSimbolosCorrecao));
+			
+			/*
+			// Salvar os simbolos de correcao a cada iteracao
 			int[] vetorParidade = ManipularArquivoM8.salvaVetorRedundancia(vetorRS8, qtdSimbolosCorrecao);	
 
 			// Apaga redundancia
 			ManipularArquivoM8.zerarRedundancia(vetorRS8, qtdSimbolosCorrecao);
 
 			// Transformar de int[] para byte[]
-			byte[] codificado = ManipularArquivoM8.byteUnsignedParaSigned(vetorRS8);
+		
+			
+			
+			codificado = ManipularArquivoM8.byteUnsignedParaSigned(vetorRS8);
 
 			// Guardar a redundancia em um arquivo sem converter de int[] para byte[]
 			ManipularArquivoM8.gravarRedundancia(vetorParidade, localAbsoluto);
@@ -95,7 +122,7 @@ public class ManipularArquivoM8 {
 			// Gravar arquivo codificado e corrompido
 			ManipularArquivoM8.gravaArquivoCodificado(codificado, localAbsoluto);
 			
-			/*
+			
 			// Transformar de byte[] para int[] guardar arquivo corrompido
 			int[] voltaDeByte = ManipularArquivoM8.byteSignedParaUnsignedSemParidade(localAbsoluto);
 
@@ -112,6 +139,9 @@ public class ManipularArquivoM8 {
 			ManipularArquivoM8.gravaArquivoDecodificado(decodificado, localAbsoluto);*/
 			
 		}
+		
+		//System.out.println("\n" + Arrays.toString(vetorRS8Codificado));
+		
 	}
 
 	// Transformar os bytes de um arquivo lido de SIGNED [-128 a 127] em UNSIGNED [0

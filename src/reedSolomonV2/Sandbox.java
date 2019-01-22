@@ -11,22 +11,35 @@ public class Sandbox {
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
 		
-		String localAbsolutoArquivo = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\aula11contabcespe.pdf";			
-		Path path = Paths.get(localAbsolutoArquivo);
-		byte[] bytesArquivo = Files.readAllBytes(path);
-		int qtdSimbolosArquivo = bytesArquivo.length;
-		int n = 255, k = 177;
-		int qtdIteracoesRS8 = qtdSimbolosArquivo/k + 1;
-		int num_input;
-		int corteVetorComeco = 0;
-	    int corteVetorFinal = 176;
-	    
-	    
-        byte[] novoVetor = Sandbox.subVetor(bytesArquivo);
-        
-        System.out.println(Arrays.toString(novoVetor));
-          
-	    
+		String localAbsoluto = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\Novo Documento de Texto.txt";
+		Path path = Paths.get(localAbsoluto);
+		byte[] dado = Files.readAllBytes(path);
+		byte[] totalVetoresRS = new byte[dado.length];
+		int qtdSimbolos = dado.length;
+		int n = 255, k = 177, t = 39, qtdSimbolosCorrecao = 78, srcPos = 0, srcPos2 = 0;
+		int qtdIteracoesRS = qtdSimbolos/k;
+		int restoVetorRS = qtdSimbolos % k;
+		
+		
+		for(int i = 0; i < qtdIteracoesRS; i++) {
+			byte[] vetorRS8 = new byte[255];
+			System.arraycopy(dado, srcPos, vetorRS8, 0, k);
+			srcPos += 177;
+						
+			// os k simbolos codificados pelo RS8 a cada iteracao sao armazenados em um unico vetor - PROBLEMA			
+			System.arraycopy(vetorRS8, 0, totalVetoresRS, srcPos2, k);
+			srcPos2 += 177;
+			
+			
+			if(restoVetorRS > 0) {
+				System.arraycopy(dado, 708, vetorRS8, 0, 50);
+				System.arraycopy(vetorRS8, 0, totalVetoresRS, srcPos, 50);
+			}
+		}
+		System.out.println(Arrays.toString(dado));
+		System.out.println(Arrays.toString(totalVetoresRS));
+		System.out.println(Arrays.equals(dado, totalVetoresRS));
+		
         
 	}
 	
