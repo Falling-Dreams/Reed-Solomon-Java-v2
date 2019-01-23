@@ -32,8 +32,8 @@ public class Sandbox {
 			
 			
 			if(restoVetorRS > 0) {
-				System.arraycopy(dado, 708, vetorRS8, 0, 50);
-				System.arraycopy(vetorRS8, 0, totalVetoresRS, srcPos, 50);
+				System.arraycopy(dado, (qtdSimbolos - restoVetorRS), vetorRS8, 0, restoVetorRS);
+				System.arraycopy(vetorRS8, 0, totalVetoresRS, srcPos, restoVetorRS);
 			}
 		}
 		System.out.println(Arrays.toString(dado));
@@ -79,5 +79,4 @@ public class Sandbox {
 	    }
 	    return arrays; // that's it
 	}
-
 }
