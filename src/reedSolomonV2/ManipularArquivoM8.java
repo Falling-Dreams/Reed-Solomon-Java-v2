@@ -8,11 +8,19 @@ import java.util.Arrays;
 import java.nio.file.Path;
 
 /*
-		TODO: Tratar os casos em que o nome do arquivo contem um ponto no metodo recuperoDiretorioNomeExtensao
+		TODO: Tratar os casos em que o nome do arquivo contem um ponto no metodo recuperoDiretorioNomeExtensao - OK
 		
 		TODO: Trocar nomes de variaveis, principalmente aquelas que controlam a copia no System.arraycopy (codificacao e decodificacao)
 		
-		TODO: Ajustar o metodo corrompeDado para corromper 39 simbolos a cada 255, ate atingir o fim do arquivo
+		TODO: Ajustar o metodo corrompeDado para corromper 39 simbolos a cada 255, ate atingir o fim do arquivo - OK
+		
+		TODO: Cronometrar o tempo de codificacao e decodificacao - OK
+		
+		TODO: Determinar o tamanho maximo de um arquivo
+		
+		TODO: Melhorar a performance para arquivos grandes (acima de 10mb)
+		
+		TODO: Identificar e tratar possiveis excecoes geradas 
  
         Para m=8:
         Parametro 1 --> Default Primitive Polynomial=D^8 + D^4 + D^3 + D^2 + 1; Integer Representation=285.
@@ -40,7 +48,7 @@ public class ManipularArquivoM8 {
 
 	public static void main(String[] args) throws IOException, ReedSolomonException {
 
-		String localAbsoluto = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\aula11contabcespe.pdf";
+		String localAbsoluto = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\UVERworld_Colors_of_the_Heart.mp3";
 		ManipularArquivoM8.degradacaoCorretiva(localAbsoluto);
 	}
 
@@ -48,12 +56,22 @@ public class ManipularArquivoM8 {
 
 		// Com 15% de erro: k=177 Bytes; n-k=78 Bytes de redundância; capacidade de
 		// correcao t=39
+		
+		// Guarda a hora inicial da execucacao
+		long startTime = System.currentTimeMillis();
 
 		// Codificacao
 		ManipularArquivoM8.degradacaoCorretivaCodificacao(localAbsoluto);
 
 		// Decodificacao
 		ManipularArquivoM8.degradacaoCorretivaDecodificacao(localAbsoluto);
+		
+		// Guarda a hora final da execucao
+		long endTime = System.currentTimeMillis();
+		
+		// Calcula o tempo total de execucao em segundos
+		long tempoTotal = ((endTime - startTime)/1000);		
+		System.out.println("\n" + "Tempo total de execucao: " + tempoTotal + " segundos");
 	}
 
 	// Metodo responsavel pela codificacao do RS m = 8, com 15% de correcao
@@ -61,7 +79,7 @@ public class ManipularArquivoM8 {
 
 		// Com 15% de erro: k=177 Bytes; n-k=78 Bytes de redundância; quantidade maxima
 		// de correcao de t=39 simbolos
-		int n = 255, k = 177, t = 39, qtdSimbolosCorrecao = 78;
+		int k = 177, t = 39, qtdSimbolosCorrecao = 78;
 		int incrementoVetorRS8C = 0, incrementoVetorUnico = 0, incrementoVetorCorrecao = 0;
 		Path path = Paths.get(localAbsoluto);
 		byte[] dado = Files.readAllBytes(path);
@@ -77,8 +95,8 @@ public class ManipularArquivoM8 {
 
 		GenericGF gf = new GenericGF(285, 256, 1);
 		ReedSolomonEncoder encoder = new ReedSolomonEncoder(gf);
-
-		//System.out.println("Inteiros unsigned ORIGINAIS do arquivo: " + "\n" + Arrays.toString(arquivo) + "\n");
+		
+		System.out.println("Codificacao em andamento..." + "\n");
 
 		/*
 		 * Rotina de codificacao A ultima iteracao e tratada separadamente, quando ha
@@ -113,7 +131,7 @@ public class ManipularArquivoM8 {
 
 		}
 		// Tratamento para o caso em que restoVetorRS > 0 - FUNCIONANDO
-		// Crio um vetor adicional apenas quando a resto na divisao 1774/177
+		// Cria-se o vetor adicional apenas quando a resto na divisao 1774/177
 		if (restoVetorRS > 0) {
 			// Novo vetor apenas para o resto do vetor arquivo
 			int[] vetorRS8CResto = new int[255];
@@ -135,7 +153,6 @@ public class ManipularArquivoM8 {
 		} else {
 			System.out.println("Arquivo codificado com sucesso! " + "\n");
 		}
-		
 
 		// Cria vetor de bytes ja codificados pelo encoder e corrompido t posicoes
 		byte[] vetorCodificadoSigned = ManipularArquivoM8.byteUnsignedParaSigned(vetorRS8Codificado);
@@ -167,6 +184,8 @@ public class ManipularArquivoM8 {
 
 		GenericGF gf = new GenericGF(285, 256, 1);
 		ReedSolomonDecoder decoder = new ReedSolomonDecoder(gf);
+		
+		System.out.println("Decodificacao em andamento..." + "\n");
 
 		// Recupera arquivo codificado e redundancia
 		int[] vetorSimbolosCorrecao = new int[((qtdIteracoesRS + 1) * qtdSimbolosCorrecao)];
@@ -256,7 +275,7 @@ public class ManipularArquivoM8 {
 		String diretorio = diretorioArquivoExtensao[0];
 		String arquivo = diretorioArquivoExtensao[1];
 		String extensao = diretorioArquivoExtensao[2];
-		String arquivoCompleto = diretorio + arquivo + "_" + "Codificado" + "." + extensao;
+		String arquivoCompleto = diretorio + arquivo + "_" + "Codificado" + extensao;
 
 		Path path = Paths.get(arquivoCompleto);
 		byte[] bytesArquivoLido = Files.readAllBytes(path);
@@ -309,8 +328,8 @@ public class ManipularArquivoM8 {
 	 * Recupera nome e local de um arquivo a partir do local absoluto // Entrada:
 	 * string representando o local absoluto // Retorno: Um vetor de strings, cuja
 	 * posicao [0] eh o local onde este arquivo // esta gravado no disco // [1] eh o
-	 * nome do arquivo e a posicao [2] eh a extensao do arquivo sem ponto //
-	 * Recuperar local independente de quantas pastas existam 
+	 * nome do arquivo e a posicao [2] eh a extensao do arquivo com ponto //
+	 * Recuperar local independente de quantas pastas existam
 	 */
 	private static String[] recuperoDiretorioNomeExtensao(String localAbsoluto) {
 		File f = new File(localAbsoluto);
@@ -324,10 +343,11 @@ public class ManipularArquivoM8 {
 		// Recupera o diretorio onde o arquivo esta armazenado
 		String diretorio = localAbsoluto.replace(arquivoComExtensao, "");
 
-		// Recupera nome e extensao do arquivo
-		String[] separaNomeDaExtensao = arquivoComExtensao.split("[.]");
-		String arquivo = separaNomeDaExtensao[0];
-		String extensao = separaNomeDaExtensao[1];
+		// Separa nome e extensao
+		int indiceExtensao = arquivoComExtensao.lastIndexOf('.');
+		int tamanhoNomeExtensao = arquivoComExtensao.length();		
+		String extensao = arquivoComExtensao.substring(indiceExtensao, tamanhoNomeExtensao);
+		String arquivo = arquivoComExtensao.substring(0, indiceExtensao);	
 
 		// Armazena diretorio, nome do arquivo e extensao do arquivo em um array de
 		// strings
@@ -346,7 +366,7 @@ public class ManipularArquivoM8 {
 		String diretorio = diretorioArquivoExtensao[0];
 		String arquivo = diretorioArquivoExtensao[1];
 		String extensao = diretorioArquivoExtensao[2];
-		String arquivoCompleto = diretorio + arquivo + "_" + "Codificado" + "." + extensao;
+		String arquivoCompleto = diretorio + arquivo + "_" + "Codificado" + extensao;
 
 		// Grava o arquivo com o nome fornecido e a extensao lida
 		File newFile = new File(arquivoCompleto);
@@ -363,7 +383,7 @@ public class ManipularArquivoM8 {
 		String diretorio = diretorioArquivoExtensao[0];
 		String arquivo = diretorioArquivoExtensao[1];
 		String extensao = diretorioArquivoExtensao[2];
-		String arquivoCompleto = diretorio + arquivo + "_" + "Decodificado" + "." + extensao;
+		String arquivoCompleto = diretorio + arquivo + "_" + "Decodificado" + extensao;
 
 		// Grava o arquivo com o nome fornecido e a extensao lida
 		File newFile = new File(arquivoCompleto);
@@ -380,7 +400,7 @@ public class ManipularArquivoM8 {
 		String diretorio = diretorioArquivoExtensao[0];
 		String arquivo = diretorioArquivoExtensao[1];
 		String extensao = diretorioArquivoExtensao[2];
-		String arquivoCompleto = diretorio + arquivo + "_" + "Redundancia" + "." + extensao;
+		String arquivoCompleto = diretorio + arquivo + "_" + "Redundancia" + extensao;
 
 		// Grava o arquivo
 		OutputStream os = new FileOutputStream(arquivoCompleto);
@@ -390,39 +410,40 @@ public class ManipularArquivoM8 {
 		os.close();
 	}
 	/*
-	// Corromper vetor de dados t posicoes, 
-	// TODO: trocar o for por system.arraycopy
-	private static void corrompeDado(byte[] dados, int t) {
-		// Vetor de bytes com SecureRandom de tamanho t
-		SecureRandom random = new SecureRandom();
-		byte[] corrupcao = new byte[t];
-		random.nextBytes(corrupcao);
-		// Concatenando dado com corrupcao randomica, de acordo com t
-		int l = 0;
-		for (int x = 0; x < t; x++) {
-			dados[x] = corrupcao[l];
-			l++;
-		}
-	}*/
-	
+	 * // Corromper vetor de dados t posicoes, // TODO: trocar o for por
+	 * system.arraycopy private static void corrompeDado(byte[] dados, int t) { //
+	 * Vetor de bytes com SecureRandom de tamanho t SecureRandom random = new
+	 * SecureRandom(); byte[] corrupcao = new byte[t]; random.nextBytes(corrupcao);
+	 * // Concatenando dado com corrupcao randomica, de acordo com t int l = 0; for
+	 * (int x = 0; x < t; x++) { dados[x] = corrupcao[l]; l++; } }
+	 */
+
 	// Corrompe 15% do arquivo com bytes randomicos
 	private static void corrompeDado(byte[] dados, int t) {
 		int qtdIteracoes = dados.length / 177;
 		int resto = dados.length % 177;
 		int incrementoVetorDados = 0;
-		SecureRandom random = new SecureRandom();		
-		
+		SecureRandom random = new SecureRandom();
+
 		for (int x = 0; x < qtdIteracoes; x++) {
 			byte[] corrupcao = new byte[t];
-			random.nextBytes(corrupcao);
-			//System.out.println(Arrays.toString(corrupcao));
+			random.nextBytes(corrupcao);			
 			System.arraycopy(corrupcao, 0, dados, incrementoVetorDados, t);
-			incrementoVetorDados =+ 255; 
+			incrementoVetorDados = +177;
 		}
+		// Tratamento quando ha resto da divisao qtdSimbolos/k
 		if (resto > 0) {
-			byte[] corrupcao = new byte[t];
-			random.nextBytes(corrupcao);
-			System.arraycopy(corrupcao, 0, dados, dados.length - resto, t);
+			// Caso o resto seja menor que t, faco a copia de n-resto simbolos, do vetor de correcao
+			if (resto < t) {
+				byte[] corrupcao = new byte[t];
+				random.nextBytes(corrupcao);
+				System.arraycopy(corrupcao, 0, dados, dados.length - resto, resto);
+				// Caso o resto seja maior que t, faco a copia de t simbolos, do vetor de correcao
+			} else {
+				byte[] corrupcao = new byte[t];
+				random.nextBytes(corrupcao);
+				System.arraycopy(corrupcao, 0, dados, dados.length - resto, t);
+			}
 		}
 	}
 
@@ -432,7 +453,7 @@ public class ManipularArquivoM8 {
 		String diretorio = diretorioArquivoExtensao[0];
 		String arquivo = diretorioArquivoExtensao[1];
 		String extensao = diretorioArquivoExtensao[2];
-		String arquivoCompleto = diretorio + arquivo + "_" + "Redundancia" + "." + extensao;
+		String arquivoCompleto = diretorio + arquivo + "_" + "Redundancia" + extensao;
 
 		Path path = Paths.get(arquivoCompleto);
 		byte[] bytesRedundancia = Files.readAllBytes(path);
