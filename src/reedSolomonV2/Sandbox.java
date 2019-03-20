@@ -1,52 +1,43 @@
 package reedSolomonV2;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.List;
+import java.util.logging.Logger;
+import javax.naming.CommunicationException;
+import javax.smartcardio.*;
 
 public class Sandbox {
-
-	public static void main(String[] args) throws IOException {
-		// TODO Auto-generated method stub
-		
-		//String localAbsoluto = "/storage/emulated/0/Download/images.jpeg";
-		String localAbsoluto = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\UVERworld_Colors_of_the_Heart.mp3";
-		String[] str = recuperoDiretorioNomeExtensao(localAbsoluto);
-		System.out.println(Arrays.toString(str));
-		
-        
-	}
 	
-	private static String[] recuperoDiretorioNomeExtensao(String localAbsoluto) {
-		File f = new File(localAbsoluto);
+	public static void main(String[] args) throws CardException, CommunicationException {
 
-		// Recupera nome e extensao do arquivo
-		String arquivoComExtensao = "";
-		int in = f.getAbsolutePath().lastIndexOf("\\");
-		if (in > -1) {
-			arquivoComExtensao = f.getAbsolutePath().substring(in + 1);
-		}
-		// Recupera o diretorio onde o arquivo esta armazenado
-		String diretorio = localAbsoluto.replace(arquivoComExtensao, "");
+		// get and print any card readers (terminals)
+        TerminalFactory factory = TerminalFactory.getDefault();
+        List<CardTerminal> terminals = factory.terminals().list();
+        System.out.println("Terminals: " + terminals);
 
-		// Separa nome e extensao
-		int indiceExtensao = arquivoComExtensao.lastIndexOf('.');
-		int tamanhoNomeExtensao = arquivoComExtensao.length();		
-		String extensao = arquivoComExtensao.substring(indiceExtensao, tamanhoNomeExtensao);
-		String arquivo = arquivoComExtensao.substring(0, indiceExtensao);	
+        // work with the first terminal
+        CardTerminal term = terminals.get(0);
 
-		// Armazena diretorio, nome do arquivo e extensao do arquivo em um array de
-		// strings
-		String[] diretorioArquivoExtensao = new String[3];
-		diretorioArquivoExtensao[0] = diretorio;
-		diretorioArquivoExtensao[1] = arquivo;
-		diretorioArquivoExtensao[2] = extensao;
+        // connect with the card. Throw an exception if a card isn't present
+        // the * means use any available protocol
+        Card card = term.connect("*");
+        System.out.println("card: " + card);
 
-		return diretorioArquivoExtensao;
+        // Once we have the card, we can open a communication channel for sending commands and getting responses
+        CardChannel channel = card.getBasicChannel();
+
+        // Create the command for reading the UID - "FF CA 00 00 00"
+        // The smartcardio library wants a byte array. Bytes in java are signed numbers with a decimal value
+        // between -128 to 127. So if we want to use the hex codes from the documentation, we need to cast.
+        byte[] instruction = {(byte)0xFF, (byte)0xCA, (byte)0x00, (byte)0x00, (byte)0x00};
+        CommandAPDU getUID = new CommandAPDU(instruction);
+
+        // Send the command and print the response
+        // The response also comes as a byte array. If we want it to match standard format, we need to convert back to hex
+        // The first x bytes will be the UID, and the last 2 bytes will be SW1 and SW2.
+        // Success = [-112, 0] = [0x90, 0x00]
+        ResponseAPDU response = channel.transmit(getUID);
+        byte[] responseBytes = response.getBytes();
+        System.out.println("response: " + Arrays.toString(responseBytes));
 	}
-	
-
 }
