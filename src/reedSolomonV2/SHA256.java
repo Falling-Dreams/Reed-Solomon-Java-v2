@@ -1,5 +1,7 @@
 package reedSolomonV2;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,9 +26,9 @@ import java.util.Arrays;
 
 public class SHA256 {
 
-	protected byte[] sha256(byte[] input) throws NoSuchAlgorithmException {
+	protected byte[] sha256(byte[] uidCartao) throws NoSuchAlgorithmException {
 		MessageDigest mDigest = MessageDigest.getInstance("SHA-256");
-		byte[] result = mDigest.digest(input);
+		byte[] result = mDigest.digest(uidCartao);
 
 		return result;
 	}
@@ -38,6 +40,22 @@ public class SHA256 {
 		byte[] hashGerado = sha256(uidCartao);
 
 		return Arrays.equals(bytesArquivo, hashGerado);
+	}
+	
+	protected File gravarHash(byte[] sha256Gerado, String localAbsoluto) throws IOException {
+
+		String[] diretorioArquivoExtensao = ManipularArquivoM8.recuperoDiretorioNomeExtensao(localAbsoluto);
+		String diretorio = diretorioArquivoExtensao[0];
+		String arquivo = diretorioArquivoExtensao[1];
+		String extensao = ".txt";
+		String arquivoCompleto = diretorio + arquivo + "_" + "Hash_Codificacao" + extensao;
+
+		// Grava o arquivo com o nome fornecido e a extensao lida
+		File newFile = new File(arquivoCompleto);
+		FileOutputStream stream = new FileOutputStream(newFile);
+		stream.write(sha256Gerado);
+		stream.close();
+		return newFile;
 	}
 
 }
