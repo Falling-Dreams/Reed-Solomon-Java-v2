@@ -49,6 +49,7 @@ public class ManipularArquivoM8 {
 	public static void main(String[] args) throws IOException, ReedSolomonException {
 
 		String localAbsoluto = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\UVERworld_Colors_of_the_Heart.mp3";
+		
 		ManipularArquivoM8.degradacaoCorretiva(localAbsoluto);
 	}
 
@@ -331,7 +332,7 @@ public class ManipularArquivoM8 {
 	 * nome do arquivo e a posicao [2] eh a extensao do arquivo com ponto //
 	 * Recuperar local independente de quantas pastas existam
 	 */
-	private static String[] recuperoDiretorioNomeExtensao(String localAbsoluto) {
+	protected static String[] recuperoDiretorioNomeExtensao(String localAbsoluto) {
 		File f = new File(localAbsoluto);
 
 		// Recupera nome e extensao do arquivo

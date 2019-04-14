@@ -15,26 +15,14 @@ import java.util.Arrays;
 	Retorna: byte[] result um vetor de bytes contendo o sha256 do vetor informado
 	
 	Metodo verificaChecksum
-	o que faz? Verifica a integridade de um arquivo
-	Parametros: String localAbsoluto uma string contendo o local absoluto do arquivo, 
-	byte[] testChecksum o hash a ser verificado do arquivo
-	Retorna: boolean true se o hash informado for o mesmo do arquivo; false caso contrario
+	o que faz? Verifica se o hash gerado na codificaco eh o mesmo do cartao que deseja decodificar o arquivo
+	Parametros: String hashGravadoCodificacao o local onde o hash gravado na codificacao se encontra, 
+	byte[] uidCartao o uid do cartao candidato a decodificacao
+	Retorna: boolean true se o cartao que deseja efetuar a decodificacao foi o mesmo que codificou
 		
 */
 
 public class SHA256 {
-
-	/*public static void main(String[] args) throws NoSuchAlgorithmException, IOException {
-
-		String localAbsoluto = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\UVERworld_Colors_of_the_Heart.mp3";
-		Path path = Paths.get(localAbsoluto);
-		byte[] dado = Files.readAllBytes(path);
-		byte[] hashDado = sha256(dado);
-
-		boolean result = verificaChecksum(localAbsoluto, hashDado);
-		System.out.println("O hash e o mesmo? " + result);
-
-	}*/
 
 	protected byte[] sha256(byte[] input) throws NoSuchAlgorithmException {
 		MessageDigest mDigest = MessageDigest.getInstance("SHA-256");
@@ -43,13 +31,13 @@ public class SHA256 {
 		return result;
 	}
 
-	public boolean verificaChecksum(String localAbsoluto, byte[] testChecksum)
+	public boolean verificaChecksum(String hashGravadoCodificacao, byte[] uidCartao)
 			throws NoSuchAlgorithmException, IOException {
-		Path path = Paths.get(localAbsoluto);
+		Path path = Paths.get(hashGravadoCodificacao);
 		byte[] bytesArquivo = Files.readAllBytes(path);
-		byte[] hashGerado = sha256(bytesArquivo);
+		byte[] hashGerado = sha256(uidCartao);
 
-		return Arrays.equals(hashGerado, testChecksum);
+		return Arrays.equals(bytesArquivo, hashGerado);
 	}
 
 }

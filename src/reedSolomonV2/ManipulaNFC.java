@@ -6,7 +6,7 @@ import javax.smartcardio.*;
 public class ManipulaNFC {
 
 	//public ManipulaNFC() {
-		//super();
+		
 	//}
 
 	protected byte[] UID() throws CardException, ReedSolomonException {
