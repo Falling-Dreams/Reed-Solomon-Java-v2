@@ -1,7 +1,5 @@
 package reedSolomonV2;
 
-import reedSolomonV2.*;
-
 public final class GenericGF {
 
 	  public static final GenericGF AZTEC_DATA_12 = new GenericGF(0x1069, 4096, 1); // x^12 + x^6 + x^5 + x^3 + 1

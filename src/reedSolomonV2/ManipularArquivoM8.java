@@ -48,7 +48,7 @@ public class ManipularArquivoM8 {
 
 	public static void main(String[] args) throws IOException, ReedSolomonException {
 
-		String localAbsoluto = "Z:\\@desenvolvimento\\workspace\\Testes-com-RS-GF(2^16)\\UVERworld_Colors_of_the_Heart.mp3";
+		String localAbsoluto = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\UVERworld_Colors_of_the_Heart.mp3";
 		ManipularArquivoM8.degradacaoCorretiva(localAbsoluto);
 	}
 
