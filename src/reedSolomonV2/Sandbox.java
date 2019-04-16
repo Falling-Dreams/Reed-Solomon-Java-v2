@@ -23,15 +23,11 @@ public class Sandbox {
 
 	public static void main(String[] args)
 			throws CardException, ReedSolomonException, NoSuchAlgorithmException, IOException {
-		
+
 		SHA256 sha = new SHA256();
 		ManipulaNFC nfc = new ManipulaNFC();
-		
-
-
 
 	}
 
 	
-
 }

@@ -41,7 +41,7 @@ public class SHA256 {
 
 		return Arrays.equals(bytesArquivo, hashGerado);
 	}
-	
+	/*
 	protected File gravarHash(byte[] sha256Gerado, String localAbsoluto) throws IOException {
 
 		String[] diretorioArquivoExtensao = ManipularArquivoM8.recuperoDiretorioNomeExtensao(localAbsoluto);
@@ -56,6 +56,6 @@ public class SHA256 {
 		stream.write(sha256Gerado);
 		stream.close();
 		return newFile;
-	}
+	}*/
 
 }
