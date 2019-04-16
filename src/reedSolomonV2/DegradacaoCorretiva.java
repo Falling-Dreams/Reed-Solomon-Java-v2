@@ -100,11 +100,11 @@ public class DegradacaoCorretiva {
 			int k = 177, t = 39, qtdSimbolosCorrecao = 78;
 			int incrementoVetorRS8C = 0, incrementoVetorUnico = 0, incrementoVetorCorrecao = 0;
 			Path path = Paths.get(localAbsoluto);
-			byte[] dado = Files.readAllBytes(path);
-			int qtdSimbolos = dado.length;
+			byte[] bytesLidosArquivo = Files.readAllBytes(path);
+			int qtdSimbolos = bytesLidosArquivo.length;
 			int qtdIteracoesRS = qtdSimbolos / k;
 			int restoVetorRS = qtdSimbolos % k;
-			int[] arquivo = ManipularArquivoM8.conversaoSignedUnsigned(localAbsoluto);
+			int[] intUnsigned = ManipularArquivoM8.conversaoSignedUnsigned(localAbsoluto);
 			int[] vetorRS8Codificado = new int[qtdSimbolos];
 			int[] vetorSimbolosCorrecao = new int[((qtdIteracoesRS + 1) * qtdSimbolosCorrecao)];
 			int[] vetorRS8C = new int[255];
@@ -130,7 +130,7 @@ public class DegradacaoCorretiva {
 				// A cada iteracao o vetorRS8C recebe 177 simbolos do arquivo original
 				// As 78 posicoes restantes sao reservadas para geracao dos simbolos de correcao
 				// desses 177 simbolos
-				System.arraycopy(arquivo, incrementoVetorRS8C, vetorRS8C, 0, k);
+				System.arraycopy(intUnsigned, incrementoVetorRS8C, vetorRS8C, 0, k);
 				incrementoVetorRS8C += 177;
 
 				// Depois de preenchido, sao gerados os simbolos de correcao do vetorRS8C a
@@ -154,7 +154,7 @@ public class DegradacaoCorretiva {
 				// Novo vetor apenas para o resto do vetor arquivo
 				int[] vetorRS8CResto = new int[255];
 				// Copia dos k simbolos de resto do vetor arquivo para o vetorRS8CResto
-				System.arraycopy(arquivo, sourcePosResto, vetorRS8CResto, 0, restoVetorRS);
+				System.arraycopy(intUnsigned, sourcePosResto, vetorRS8CResto, 0, restoVetorRS);
 				// Codificacao dos simbolos restantes, a codificacao e feita
 				// independentemente do resto, serao sempre codificados 177 simbolos (mesmo os
 				// zeros)
@@ -165,7 +165,7 @@ public class DegradacaoCorretiva {
 				System.arraycopy(vetorRS8CResto, k, vetorSimbolosCorrecao, destPosVetCorrecao, qtdSimbolosCorrecao);
 			}
 
-			if (Arrays.equals(arquivo, vetorRS8Codificado) != true) {
+			if (Arrays.equals(intUnsigned, vetorRS8Codificado) != true) {
 				throw new ReedSolomonException(
 						"Erro na codificacao, vetor codificado nao e igual ao vetor do arquivo (em inteiro unsigned)");
 			} else {
