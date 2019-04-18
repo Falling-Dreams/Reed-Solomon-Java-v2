@@ -14,24 +14,21 @@ import reedSolomonV2.ManipularArquivoM8;
 	Parametro 1 --> Default Primitive Polynomial=D^8 + D^4 + D^3 + D^2 + 1; Integer Representation=285.
 	Parametro 2 --> n=2^m = 256
 	n=200; k=120; n-k=80; t=40;
-
 	RS para m=8:
 	Com 5% de erro:
 	0.1*255 = 255-k
 	k=229 Bytes
 	n-k=26 Bytes de redundancia
-
 	Com 10% de erro:
 	0.2*255 = 255-k
 	k=203 Bytes
 	n-k=52 Bytes de redundancia
-
 	Com 15% de erro:
 	0.3*255 = 255-k
 	k=177 Bytes
 	n-k=78 Bytes de redundancia
 	
-	TODO: Corromper t simbolos aleatorios
+	TODO: Corromper t simbolos aleatorios - OK
 	
 	TODO: Padronizar nomenclatura de metodos e classes
 	
@@ -39,7 +36,7 @@ import reedSolomonV2.ManipularArquivoM8;
 	
 	TODO: Alterar metodo de exclusão, para excluir um arquivo mesmo em uso
 	
-	TODO:
+	TODO: Disponibilizar diferentes porcentagens de degradacao (5%, 10%, 20%)
 */
 
 public class DegradacaoCorretiva {
@@ -50,20 +47,20 @@ public class DegradacaoCorretiva {
 		// correcao t=39
 		DegradacaoCorretiva degrada = new DegradacaoCorretiva();
 
-		//String localAbsoluto = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\PMBOK 5ª Edição [Português][2013].pdf";
-		String localAbsolutoCodi = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\PMBOK 5ª Edição [Português][2013]_Codificado.pdf";
-		String localAbsolutoCorrecao = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\PMBOK 5ª Edição [Português][2013]_Correcao.pdf";
-		String localAbsolutoHash = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\PMBOK 5ª Edição [Português][2013]_Hash.pdf";
+		String localAbsoluto = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\PMBOK 5ª Edição [Português][2013].pdf";
+		//String localAbsolutoCodi = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\PMBOK 5ª Edição [Português][2013]_Codificado.pdf";
+		//String localAbsolutoCorrecao = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\PMBOK 5ª Edição [Português][2013]_Correcao.pdf";
+		//String localAbsolutoHash = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\PMBOK 5ª Edição [Português][2013]_Hash.pdf";
 
 		// Codificacao
-		//degrada.codificacao(localAbsoluto);
+		degrada.codificacao(localAbsoluto);
 
 		// Guarda a hora inicial da execucacao
 		long startTime = System.currentTimeMillis();
 
 		// Decodificacao
-		degrada.decodificacao(localAbsolutoCodi, localAbsolutoCorrecao,
-		localAbsolutoHash);
+		//degrada.decodificacao(localAbsolutoCodi, localAbsolutoCorrecao,
+		//localAbsolutoHash);
 
 		// Guarda a hora final da execucao
 		long endTime = System.currentTimeMillis();

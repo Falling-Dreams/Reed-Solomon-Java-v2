@@ -9,6 +9,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,46 +28,19 @@ public class Sandbox {
 	public static void main(String[] args)
 			throws CardException, ReedSolomonException, NoSuchAlgorithmException, IOException {
 
-		String localAbsoluto = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\Novo Documento de Texto2.txt";
-		Path path = Paths.get(localAbsoluto);
-		byte[] bytesArquivoLido = Files.readAllBytes(path);
-		System.out.println("Antes da corrupcao: " + (Arrays.toString(bytesArquivoLido)));
-		Sandbox.corrompeDado(bytesArquivoLido, 39);
-		System.out.println("Depois da corrupcao: " + (Arrays.toString(bytesArquivoLido)));
-		// System.out.println(Sandbox.getIndiceAleatorioVetorK());
-
-	}
-
-	protected static void corrompeDado(byte[] bytesArquivo, int t) {
-		int k = 177;
-		int qtdIteracoes = bytesArquivo.length / k;
-		//int resto = bytesArquivo.length % 177;
-		int incrementoVetorDados = 0;
-		byte[] vetorTempCorrupcao = new byte[k];
-		//byte[] vetorArquivoCorrompido = new byte[bytesArquivo.length];
-		SecureRandom random = new SecureRandom();
-		int indiceAleatorio = getIndiceAleatorioVetorK(random);
-		byte[] corrupcao = new byte[t];
-		random.nextBytes(corrupcao);
-
-		for (int x = 0; x < qtdIteracoes; x++) {
-			System.arraycopy(bytesArquivo, incrementoVetorDados, vetorTempCorrupcao, 0, k);
-			incrementoVetorDados += k;
-
-			//for (int n = 0; n < 39; n++) {
-				//System.arraycopy(corrupcao, 0, vetorTempCorrupcao, indiceAleatorio, 1);
-			//}
-
-			System.arraycopy(vetorTempCorrupcao, 0, bytesArquivo, incrementoVetorDados, k);
+		String localAbsoluto = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\PMBOK 5ª Edição [Português][2013]_Codificado_Decodificado.pdf";
+		File file = new File(localAbsoluto);
+		//FileChannel channel = new RandomAccessFile(file, "rw").getChannel();
+		//FileLock lock = channel.lock();
+		FileOutputStream fos = new FileOutputStream(localAbsoluto);
+		try {
+			//lock = channel.tryLock();
+			fos.close();			
+			file.delete();
+		} catch (Exception e) {
+			System.out.println("Deu ruim");
 		}
 
-		//return vetorArquivoCorrompido;
 	}
 
-	protected static int getIndiceAleatorioVetorK(SecureRandom random) {
-		byte[] vetorK = new byte[177];
-		// SecureRandom random = new SecureRandom();
-		int indiceAleatorio = random.nextInt(vetorK.length);
-		return indiceAleatorio;
-	}
 }

@@ -108,8 +108,10 @@ public class ManipularArquivoM8 {
 
 		return diretorioArquivoExtensao;
 	}
+
 	// o que faz: grava arquivo em disco
-	// Entrada: bytesArquivo vetor de bytes a serem gravados, localAbsoluto local onde o arquivo sera gravado
+	// Entrada: bytesArquivo vetor de bytes a serem gravados, localAbsoluto local
+	// onde o arquivo sera gravado
 	// sufixoArquivo o sufixo que o arquivo recebera apos o nome e antes da extensao
 	// Retorno: newFile o arquivo gerado
 	protected static File gravarArquivo(byte[] bytesArquivo, String localAbsoluto, String sufixoArquivo)
@@ -128,47 +130,73 @@ public class ManipularArquivoM8 {
 		stream.close();
 		return newFile;
 	}
-	
+
+	// O que faz: Corrompe 15% do arquivo com bytes randomicos
+	// Entrada: bytesArquivo o vetor do arquivo que sera corrompido, t a quantidade
+	// de erros que serão gerados
+	// Retorno: void
+	// Obs cada vetor precisa de uma variavel de incremento separada
+	protected static void corrompeDado(byte[] bytesArquivo, int t) {
+		int k = 177;
+		int qtdIteracoes = bytesArquivo.length / k;
+		int resto = bytesArquivo.length % 177;
+		int incrementoVetorDados = 0;
+		int incrementoVetorCorrupcao = 0;
+		int inicioCopiaResto = bytesArquivo.length - resto;
+		int indiceAleatorioVetorK = 0;
+		int indiceAleatorioVetorCorrupcao = 0;
+		byte[] vetorTempCorrupcao = new byte[k];
+		SecureRandom random = new SecureRandom();
+		byte[] corrupcao = new byte[t];
+		random.nextBytes(corrupcao);
+
+		// Divido o vetor original em um vetor de 177 posicoes, conforme o numero de
+		// iteracoes
+		for (int x = 0; x < qtdIteracoes; x++) {
+
+			System.arraycopy(bytesArquivo, incrementoVetorDados, vetorTempCorrupcao, 0, k);
+			incrementoVetorDados += k;
+
+			// A cada 177 simbolos do arquivo original, corrompo t posicoes aleatorias
+			// dessas 177
+			for (int n = 0; n < 39; n++) {
+				indiceAleatorioVetorK = getIndiceAleatorioVetorK(random);
+				indiceAleatorioVetorCorrupcao = random.nextInt(corrupcao.length);
+				System.arraycopy(corrupcao, indiceAleatorioVetorCorrupcao, vetorTempCorrupcao, indiceAleatorioVetorK,
+						1);
+			}
+			// Devolvo o vetor original, agora, corrompido t posicoes aleatorias a cada k
+			// simbolos
+			System.arraycopy(vetorTempCorrupcao, 0, bytesArquivo, incrementoVetorCorrupcao, k);
+			incrementoVetorCorrupcao += k;
+		}
+		if (resto > 0) {
+			byte[] vetorRestoTempCorrupcao = new byte[resto];
+			System.arraycopy(bytesArquivo, inicioCopiaResto, vetorRestoTempCorrupcao, 0, resto);
+			for (int m = 0; m < resto; m++) {
+				indiceAleatorioVetorCorrupcao = random.nextInt(corrupcao.length);
+				System.arraycopy(corrupcao, indiceAleatorioVetorCorrupcao, bytesArquivo, inicioCopiaResto, 1);
+			}
+		}
+	}
+
 	// Corrompe 15% do arquivo com bytes randomicos
 	// O que faz:
 	// Entrada:
 	// Retorno:
-	protected static void corrompeDado(byte[] dados, int t) {
-		int qtdIteracoes = dados.length / 177;
-		int resto = dados.length % 177;
-		int incrementoVetorDados = 0;
-		SecureRandom random = new SecureRandom();
+	protected static int getIndiceAleatorioVetorK(SecureRandom random) {
+		byte[] vetorK = new byte[177];
+		int indiceAleatorio = random.nextInt(vetorK.length);
+		return indiceAleatorio;
+	}
 
-		for (int x = 0; x < qtdIteracoes; x++) {
-			byte[] corrupcao = new byte[t];
-			random.nextBytes(corrupcao);
-			System.arraycopy(corrupcao, 0, dados, incrementoVetorDados, t);
-			incrementoVetorDados = +177;
-		}
-		// Tratamento quando ha resto da divisao qtdSimbolos/k
-		if (resto > 0) {
-			// Caso o resto seja menor que t, faco a copia de n-resto simbolos, do vetor de
-			// correcao
-			if (resto < t) {
-				byte[] corrupcao = new byte[t];
-				random.nextBytes(corrupcao);
-				System.arraycopy(corrupcao, 0, dados, dados.length - resto, resto);
-				// Caso o resto seja maior que t, faco a copia de t simbolos, do vetor de
-				// correcao
-			} else {
-				byte[] corrupcao = new byte[t];
-				random.nextBytes(corrupcao);
-				System.arraycopy(corrupcao, 0, dados, dados.length - resto, t);
-			}
-		}
-	}	
-
-	// Deleta os arquivos codificado, decodificado, correcao e hash
-	// O que faz:
-	// Entrada:
-	// Retorno:
+	// O que faz: Deleta os arquivos codificado, decodificado, correcao e hash
+	// Entrada: os locais absolutos com nome do arquivo e extensao
+	// Retorno: void
+	// Exceção: Caso não seja possivel excluir o arquivo
 	protected static void deletarArquivos(String codificado, String decodificado, String hash, String correcao)
 			throws ReedSolomonException {
+		// FileLock lock = channel.lock();
 		try {
 			Path pathCodificado = Paths.get(codificado);
 			Path pathDecodificado = Paths.get(decodificado);
