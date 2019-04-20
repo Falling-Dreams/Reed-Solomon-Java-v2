@@ -8,6 +8,9 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import javax.smartcardio.CardException;
 import reedSolomonV2.ManipularArquivoM8;
+import com.google.common.base.Stopwatch;
+
+
 
 /*
 	Para m=8:
@@ -36,50 +39,57 @@ import reedSolomonV2.ManipularArquivoM8;
 	
 	TODO: Alterar metodo de exclusão, para excluir um arquivo mesmo em uso
 	
-	TODO: Disponibilizar diferentes porcentagens de degradacao (5%, 10%, 20%)
+	TODO: Disponibilizar diferentes porcentagens de degradacao (5%, 10%, 15%, 20%, 25% e 50%)
 */
 
 public class DegradacaoCorretiva {
 
 	public static void main(String[] args)
-			throws NoSuchAlgorithmException, IOException, ReedSolomonException, CardException {
-		// Com 15% de erro: k=177 Bytes; n-k=78 Bytes de redundância; capacidade de
-		// correcao t=39
+			throws NoSuchAlgorithmException, IOException, ReedSolomonException, CardException {			
+		
 		DegradacaoCorretiva degrada = new DegradacaoCorretiva();
-
-		String localAbsoluto = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\PMBOK 5ª Edição [Português][2013].pdf";
-		//String localAbsolutoCodi = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\PMBOK 5ª Edição [Português][2013]_Codificado.pdf";
-		//String localAbsolutoCorrecao = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\PMBOK 5ª Edição [Português][2013]_Correcao.pdf";
-		//String localAbsolutoHash = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\PMBOK 5ª Edição [Português][2013]_Hash.pdf";
+		int correcao = 50;
+		String localAbsoluto = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\AULA 04 - Requisitos - Folhetos.pdf";
+		String localAbsolutoCodi = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\AULA 04 - Requisitos - Folhetos_Codificado.pdf";
+		String localAbsolutoCorrecao = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\AULA 04 - Requisitos - Folhetos_Redundancia.pdf";
+		String localAbsolutoHash = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\AULA 04 - Requisitos - Folhetos_Hash.pdf";
 
 		// Codificacao
-		degrada.codificacao(localAbsoluto);
-
-		// Guarda a hora inicial da execucacao
-		long startTime = System.currentTimeMillis();
+		//degrada.codificacao(localAbsoluto, correcao);		
 
 		// Decodificacao
-		//degrada.decodificacao(localAbsolutoCodi, localAbsolutoCorrecao,
-		//localAbsolutoHash);
-
-		// Guarda a hora final da execucao
-		long endTime = System.currentTimeMillis();
-
-		// Calcula o tempo total de execucao em segundos
-		long tempoTotal = ((endTime - startTime) / 1000);
-		System.out.println("\n" + "Tempo total de execucao: " + tempoTotal + " segundos");
-
+		degrada.decodificacao(localAbsolutoCodi, localAbsolutoCorrecao, localAbsolutoHash, correcao);
 	}
 
 	// Metodo responsavel pela codificacao do RS m = 8, com 15% de correcao
-	protected void codificacao(String localAbsoluto)
+	protected void codificacao(String localAbsoluto, int porcentagemCorrecao)
 			throws IOException, ReedSolomonException, CardException, NoSuchAlgorithmException {
+		
+		//Instancia Stopwatch da biblioteca Guava e inicia a contagem de tempo para a codificacao
+		Stopwatch timer = new Stopwatch();
+		timer.start();
 
-		// Com 15% de erro: k=177 Bytes; n-k=78 Bytes de redundância; quantidade maxima
-		// de correcao de t=39 simbolos
-
-		// Instancia a classe que manipula o arquivo para degradacao
-		// ManipularArquivoM8 manipula = new ManipularArquivoM8();
+		int k = 0;
+		switch (porcentagemCorrecao) {
+		case 5:
+			k = 229;
+			break;
+		case 10:
+			k = 203;
+			break;
+		case 15:
+			k = 177;
+			break;
+		case 20:
+			k = 151;
+			break;
+		case 25:
+			k = 125;
+			break;
+		case 50:
+			k = 5;
+			break;
+		}
 
 		// Instancia a classe que manipula o NFC
 		ManipulaNFC nfc = new ManipulaNFC();
@@ -94,7 +104,7 @@ public class DegradacaoCorretiva {
 		} else {
 			System.out.println("Cartão NFC e terminais estão disponíveis!" + "\n");
 
-			int k = 177, t = 39, qtdSimbolosCorrecao = 78;
+			int n = 255, t = ((n - k) / 2), qtdSimbolosRedundancia = n - k;
 			int incrementoVetorRS8C = 0, incrementoVetorUnico = 0, incrementoVetorCorrecao = 0;
 			Path path = Paths.get(localAbsoluto);
 			byte[] bytesLidosArquivo = Files.readAllBytes(path);
@@ -103,10 +113,10 @@ public class DegradacaoCorretiva {
 			int restoVetorRS = qtdSimbolos % k;
 			int[] intUnsigned = ManipularArquivoM8.conversaoSignedUnsigned(localAbsoluto);
 			int[] vetorRS8Codificado = new int[qtdSimbolos];
-			int[] vetorSimbolosCorrecao = new int[((qtdIteracoesRS + 1) * qtdSimbolosCorrecao)];
+			int[] vetorSimbolosCorrecao = new int[((qtdIteracoesRS + 1) * qtdSimbolosRedundancia)];
 			int[] vetorRS8C = new int[255];
 			int sourcePosResto = qtdSimbolos - restoVetorRS;
-			int destPosVetCorrecao = qtdIteracoesRS * qtdSimbolosCorrecao;
+			int destPosVetCorrecao = qtdIteracoesRS * qtdSimbolosRedundancia;
 
 			GenericGF gf = new GenericGF(285, 256, 1);
 			ReedSolomonEncoder encoder = new ReedSolomonEncoder(gf);
@@ -124,42 +134,42 @@ public class DegradacaoCorretiva {
 			 */
 
 			for (int h = 0; h < qtdIteracoesRS; h++) {
-				// A cada iteracao o vetorRS8C recebe 177 simbolos do arquivo original
-				// As 78 posicoes restantes sao reservadas para geracao dos simbolos de correcao
-				// desses 177 simbolos
+				// A cada iteracao o vetorRS8C recebe k simbolos do arquivo original
+				// As n-k posicoes restantes sao reservadas para geracao dos simbolos de correcao
+				// desses k simbolos
 				System.arraycopy(intUnsigned, incrementoVetorRS8C, vetorRS8C, 0, k);
-				incrementoVetorRS8C += 177;
+				incrementoVetorRS8C += k;
 
 				// Depois de preenchido, sao gerados os simbolos de correcao do vetorRS8C a
 				// partir da codificacao
-				encoder.encode(vetorRS8C, qtdSimbolosCorrecao);
+				encoder.encode(vetorRS8C, qtdSimbolosRedundancia);
 
 				// os k simbolos codificados pelo RS8 a cada iteracao sao armazenados em um
 				// univo vetor
 				System.arraycopy(vetorRS8C, 0, vetorRS8Codificado, incrementoVetorUnico, k);
-				incrementoVetorUnico += 177;
+				incrementoVetorUnico += k;
 
 				// os n-k simbolos de correcao codificados pelo RS8 sao armazenados em um unico
 				// vetor
-				System.arraycopy(vetorRS8C, k, vetorSimbolosCorrecao, incrementoVetorCorrecao, qtdSimbolosCorrecao);
-				incrementoVetorCorrecao += 78;
+				System.arraycopy(vetorRS8C, k, vetorSimbolosCorrecao, incrementoVetorCorrecao, qtdSimbolosRedundancia);
+				incrementoVetorCorrecao += qtdSimbolosRedundancia;
 
 			}
 			// Tratamento para o caso em que restoVetorRS > 0 - FUNCIONANDO
-			// Cria-se o vetor adicional apenas quando a resto na divisao 1774/177
+			// Cria-se o vetor adicional apenas quando ha resto na divisao 
 			if (restoVetorRS > 0) {
 				// Novo vetor apenas para o resto do vetor arquivo
 				int[] vetorRS8CResto = new int[255];
 				// Copia dos k simbolos de resto do vetor arquivo para o vetorRS8CResto
 				System.arraycopy(intUnsigned, sourcePosResto, vetorRS8CResto, 0, restoVetorRS);
 				// Codificacao dos simbolos restantes, a codificacao e feita
-				// independentemente do resto, serao sempre codificados 177 simbolos (mesmo os
+				// independentemente do resto, serao sempre codificados k simbolos (mesmo os
 				// zeros)
-				encoder.encode(vetorRS8CResto, qtdSimbolosCorrecao);
+				encoder.encode(vetorRS8CResto, qtdSimbolosRedundancia);
 				// Copia dos k simbolos para o vetor unico vetorRS8Codificado
 				System.arraycopy(vetorRS8CResto, 0, vetorRS8Codificado, sourcePosResto, restoVetorRS);
 				// Copia dos simbolos de correcao do resto para o vetorSimbolosCorrecao
-				System.arraycopy(vetorRS8CResto, k, vetorSimbolosCorrecao, destPosVetCorrecao, qtdSimbolosCorrecao);
+				System.arraycopy(vetorRS8CResto, k, vetorSimbolosCorrecao, destPosVetCorrecao, qtdSimbolosRedundancia);
 			}
 
 			if (Arrays.equals(intUnsigned, vetorRS8Codificado) != true) {
@@ -171,14 +181,14 @@ public class DegradacaoCorretiva {
 
 			// Cria vetor de bytes ja codificados pelo encoder e corrompido t posicoes
 			byte[] vetorCodificadoSigned = ManipularArquivoM8.conversaoUnsignedSigned(vetorRS8Codificado);
-			ManipularArquivoM8.corrompeDado(vetorCodificadoSigned, t);
-			
+			ManipularArquivoM8.corrompeDado(vetorCodificadoSigned, t, k);
+
 			// Cria vetor de bytes dos simbolos de correcao
 			byte[] vetorCorrecaoSigned = ManipularArquivoM8.conversaoUnsignedSigned(vetorSimbolosCorrecao);
 
 			// Gravar arquivo codificado e corrompido
 			ManipularArquivoM8.gravarArquivo(vetorCodificadoSigned, localAbsoluto, "Codificado");
-			ManipularArquivoM8.gravarArquivo(vetorCorrecaoSigned, localAbsoluto, "Correcao");
+			ManipularArquivoM8.gravarArquivo(vetorCorrecaoSigned, localAbsoluto, "Redundancia");
 
 			// Gerar hash da UID do cartao que efetuou a codificacao, gravando o hash em um
 			// arquivo de texto no mesmo local onde o arquivo se encontra
@@ -187,16 +197,39 @@ public class DegradacaoCorretiva {
 			ManipularArquivoM8.gravarArquivo(hashUID, localAbsoluto, "Hash");
 			System.out.println("Hash do cartão foi gravado ");
 		}
-
+		System.out.println("Tempo total de execucao: " + timer.stop());
 	}
 
-	// Metodo responsavel pela decodificacao do RS m = 8, com 15% de correcao
+	// Metodo responsavel pela decodificacao do RS m = 8, com t/n% de correcao
 	protected void decodificacao(String localAbsolutoArquivoCodificado, String localAbsolutoCorrecao,
-			String localAbsolutoHash)
+			String localAbsolutoHash, int porcentagemCorrecao)
 			throws IOException, ReedSolomonException, CardException, NoSuchAlgorithmException {
 
-		// Instancia a classe que manipula o arquivo para degradacao
-		// ManipularArquivoM8 manipula = new ManipularArquivoM8();
+		//Instancia Stopwatch da biblioteca Guava e inicia a contagem de tempo para a codificacao
+		Stopwatch timer = new Stopwatch();
+		timer.start();
+
+		int k = 0;
+		switch (porcentagemCorrecao) {
+		case 5:
+			k = 229;
+			break;
+		case 10:
+			k = 203;
+			break;
+		case 15:
+			k = 177;
+			break;
+		case 20:
+			k = 151;
+			break;
+		case 25:
+			k = 125;
+			break;
+		case 50:
+			k = 5;
+			break;
+		}
 
 		// Instancia a classe que manipula o NFC
 		ManipulaNFC nfc = new ManipulaNFC();
@@ -223,10 +256,10 @@ public class DegradacaoCorretiva {
 						"O cartão presente no terminal é o mesmo que efetuou a codificação, a decodificação será iniciada"
 								+ "\n");
 
-				while (nfc.cartaoOuTerminalAusentes() != true) {
+				//while (nfc.cartaoOuTerminalAusentes() != true) {
 
 					// Com 15% de erro: k=177 Bytes n-k=78 Bytes de redundância t=39
-					int n = 255, k = 177, t = 39, qtdSimbolosCorrecao = 78, destPos = 0;
+					int n = 255, t = ((n - k) / 2), qtdSimbolosRedundancia = (n - k), destPos = 0;
 					int srcPosDecodi = 0, incrementoVetorDecodificado = 0;
 					Path path = Paths.get(localAbsolutoArquivoCodificado);
 					byte[] dado = Files.readAllBytes(path);
@@ -234,9 +267,9 @@ public class DegradacaoCorretiva {
 					int qtdIteracoesRS = qtdSimbolos / k;
 					int restoVetorRS = qtdSimbolos % k;
 					int[] vetorRS8D = new int[255];
-					int destPosRS8D = vetorRS8D.length - qtdSimbolosCorrecao;
+					int destPosRS8D = vetorRS8D.length - qtdSimbolosRedundancia;
 					int incrementoVetorResto = qtdSimbolos - restoVetorRS;
-					int sourcePosRestoD = qtdIteracoesRS * qtdSimbolosCorrecao;
+					int sourcePosRestoD = qtdIteracoesRS * qtdSimbolosRedundancia;
 					int[] arquivo = ManipularArquivoM8.conversaoSignedUnsigned(localAbsolutoArquivoCodificado);
 					int[] vetorRS8Decodificado = new int[qtdSimbolos];
 
@@ -246,10 +279,9 @@ public class DegradacaoCorretiva {
 					System.out.println("Decodificacao em andamento..." + "\n");
 
 					// Recupera arquivo codificado e redundancia
-					int[] vetorSimbolosCorrecao = new int[((qtdIteracoesRS + 1) * qtdSimbolosCorrecao)];
+					int[] vetorSimbolosCorrecao = new int[((qtdIteracoesRS + 1) * qtdSimbolosRedundancia)];
 					vetorSimbolosCorrecao = ManipularArquivoM8.conversaoSignedUnsigned(localAbsolutoCorrecao);
-					int[] voltaCodificado = ManipularArquivoM8
-							.conversaoSignedUnsigned(localAbsolutoArquivoCodificado);
+					int[] voltaCodificado = ManipularArquivoM8.conversaoSignedUnsigned(localAbsolutoArquivoCodificado);
 
 					// Rotina de decodificacao
 					for (int h = 0; h < qtdIteracoesRS; h++) {
@@ -257,19 +289,20 @@ public class DegradacaoCorretiva {
 						// Quebrar vetor unico de simbolos codificados em vetores de 255
 						// Copia 177 simbolos de informacao para o vetorRS8D
 						System.arraycopy(voltaCodificado, incrementoVetorDecodificado, vetorRS8D, 0, k);
-						incrementoVetorDecodificado += 177;
+						incrementoVetorDecodificado += k;
 
 						// Concatenando dado com redudancia e efetua Decodificacao
-						System.arraycopy(vetorSimbolosCorrecao, destPos, vetorRS8D, destPosRS8D, qtdSimbolosCorrecao);
-						destPos += 78;
+						System.arraycopy(vetorSimbolosCorrecao, destPos, vetorRS8D, destPosRS8D,
+								qtdSimbolosRedundancia);
+						destPos += qtdSimbolosRedundancia;
 
 						// Decodificacao
-						decoder.decode(vetorRS8D, qtdSimbolosCorrecao);
+						decoder.decode(vetorRS8D, qtdSimbolosRedundancia);
 
 						// Guardar o que foi decodificado em um unico vetor para gravar o arquivo
 						// decodificado
 						System.arraycopy(vetorRS8D, 0, vetorRS8Decodificado, srcPosDecodi, k);
-						srcPosDecodi += 177;
+						srcPosDecodi += k;
 					}
 					// Tratamento quando ha resto na divisao qtdSimbolosArquivo / k
 					if (restoVetorRS > 0) {
@@ -279,34 +312,28 @@ public class DegradacaoCorretiva {
 						System.arraycopy(voltaCodificado, incrementoVetorResto, vetorRS8DResto, 0, restoVetorRS);
 						// Copia n-k simbolos de correcao para vetorRS8DResto
 						System.arraycopy(vetorSimbolosCorrecao, sourcePosRestoD, vetorRS8DResto, k,
-								qtdSimbolosCorrecao);
+								qtdSimbolosRedundancia);
 						// Decodificacao do resto
-						decoder.decode(vetorRS8DResto, qtdSimbolosCorrecao);
+						decoder.decode(vetorRS8DResto, qtdSimbolosRedundancia);
 						// Copia dos k simbolos de resto para vetor unico
 						System.arraycopy(vetorRS8DResto, 0, vetorRS8Decodificado, incrementoVetorResto, restoVetorRS);
 						// Copia dos n-k simbolos de correcao do resto para vetor unico
 						System.arraycopy(vetorRS8DResto, k, vetorSimbolosCorrecao, sourcePosRestoD,
-								qtdSimbolosCorrecao);
+								qtdSimbolosRedundancia);
 					}
-
-					// if (Arrays.equals(arquivo, vetorRS8Decodificado) != true) {
-					// throw new ReedSolomonException(
-					// "Erro na decodificacao, vetor decodificado nao e igual ao vetor do arquivo
-					// (em inteiro unsigned)");
-					// } else {
-					// System.out.println("Arquivo decodificado com sucesso! ");
-					// }
-
+				
 					// Gravacao em disco do arquivo decodificado e corrigido
 					byte[] decodificado = ManipularArquivoM8.conversaoUnsignedSigned(vetorRS8Decodificado);
 					ManipularArquivoM8.gravarArquivo(decodificado, localAbsolutoArquivoCodificado, "Decodificado");
-
-				}
-				ManipularArquivoM8.deletarArquivos(localAbsolutoArquivoCodificado,
-						"Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\PMBOK 5ª Edição [Português][2013]_Codificado_Decodificado.pdf",
-						localAbsolutoHash, localAbsolutoCorrecao);
+					
+				//}
+				//ManipularArquivoM8.deletarArquivos(localAbsolutoArquivoCodificado,
+						//"Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\CertiProf-Scrum-Master_Codificado_Decodificado.pdf",
+						//localAbsolutoHash, localAbsolutoCorrecao);
+				System.out.println("Tempo total de execucao: " + timer.stop());
 			}
 		}
+		
 	}
 
 }

@@ -131,36 +131,36 @@ public class ManipularArquivoM8 {
 		return newFile;
 	}
 
-	// O que faz: Corrompe 15% do arquivo com bytes randomicos
+	// O que faz: Corrompe t% do arquivo com bytes randomicos
 	// Entrada: bytesArquivo o vetor do arquivo que sera corrompido, t a quantidade
 	// de erros que serão gerados
 	// Retorno: void
 	// Obs cada vetor precisa de uma variavel de incremento separada
-	protected static void corrompeDado(byte[] bytesArquivo, int t) {
-		int k = 177;
+	protected static void corrompeDado(byte[] bytesArquivo, int t, int k) {
+		//int k = 177;
+		SecureRandom random = new SecureRandom();
 		int qtdIteracoes = bytesArquivo.length / k;
-		int resto = bytesArquivo.length % 177;
+		int resto = bytesArquivo.length % k;
 		int incrementoVetorDados = 0;
 		int incrementoVetorCorrupcao = 0;
 		int inicioCopiaResto = bytesArquivo.length - resto;
-		int indiceAleatorioVetorK = 0;
+		int indiceAleatorioVetorK = random.nextInt(k);;
 		int indiceAleatorioVetorCorrupcao = 0;
-		byte[] vetorTempCorrupcao = new byte[k];
-		SecureRandom random = new SecureRandom();
+		byte[] vetorTempCorrupcao = new byte[k];		
 		byte[] corrupcao = new byte[t];
 		random.nextBytes(corrupcao);
 
-		// Divido o vetor original em um vetor de 177 posicoes, conforme o numero de
+		// Divido o vetor original em um vetor de k posicoes, conforme o numero de
 		// iteracoes
 		for (int x = 0; x < qtdIteracoes; x++) {
 
 			System.arraycopy(bytesArquivo, incrementoVetorDados, vetorTempCorrupcao, 0, k);
 			incrementoVetorDados += k;
 
-			// A cada 177 simbolos do arquivo original, corrompo t posicoes aleatorias
-			// dessas 177
-			for (int n = 0; n < 39; n++) {
-				indiceAleatorioVetorK = getIndiceAleatorioVetorK(random);
+			// A cada k simbolos do arquivo original, corrompo t posicoes aleatorias
+			// dessas k posicoes
+			for (int n = 0; n < t; n++) {
+				//indiceAleatorioVetorK = getIndiceAleatorioVetorK(random);
 				indiceAleatorioVetorCorrupcao = random.nextInt(corrupcao.length);
 				System.arraycopy(corrupcao, indiceAleatorioVetorCorrupcao, vetorTempCorrupcao, indiceAleatorioVetorK,
 						1);
@@ -179,17 +179,7 @@ public class ManipularArquivoM8 {
 			}
 		}
 	}
-
-	// Corrompe 15% do arquivo com bytes randomicos
-	// O que faz:
-	// Entrada:
-	// Retorno:
-	protected static int getIndiceAleatorioVetorK(SecureRandom random) {
-		byte[] vetorK = new byte[177];
-		int indiceAleatorio = random.nextInt(vetorK.length);
-		return indiceAleatorio;
-	}
-
+	
 	// O que faz: Deleta os arquivos codificado, decodificado, correcao e hash
 	// Entrada: os locais absolutos com nome do arquivo e extensao
 	// Retorno: void

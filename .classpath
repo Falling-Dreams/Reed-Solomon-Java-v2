@@ -4,5 +4,6 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="lib" path="Z:/@desenvolvimento/Bibliotecas/commons-lang3-3.8.1/commons-lang3-3.8.1.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="Z:/@desenvolvimento/Bibliotecas/guava.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
