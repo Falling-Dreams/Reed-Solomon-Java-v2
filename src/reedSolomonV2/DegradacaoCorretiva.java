@@ -48,17 +48,17 @@ public class DegradacaoCorretiva {
 			throws NoSuchAlgorithmException, IOException, ReedSolomonException, CardException {			
 		
 		DegradacaoCorretiva degrada = new DegradacaoCorretiva();
-		int correcao = 50;
-		String localAbsoluto = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\AULA 04 - Requisitos - Folhetos.pdf";
-		String localAbsolutoCodi = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\AULA 04 - Requisitos - Folhetos_Codificado.pdf";
-		String localAbsolutoCorrecao = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\AULA 04 - Requisitos - Folhetos_Redundancia.pdf";
-		String localAbsolutoHash = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\AULA 04 - Requisitos - Folhetos_Hash.pdf";
+		int correcao = 25;
+		String localAbsoluto = "Z:\\@Projeto-Degradacao-Corretiva\\@Medições de Tempo\\5mb\\5mb.pdf";
+		String localAbsolutoCodi = "Z:\\@Projeto-Degradacao-Corretiva\\@Medições de Tempo\\5mb\\5mb_Codificado.pdf";
+		String localAbsolutoCorrecao = "Z:\\@Projeto-Degradacao-Corretiva\\@Medições de Tempo\\5mb\\5mb_Redundancia.pdf";
+		String localAbsolutoHash = "Z:\\@Projeto-Degradacao-Corretiva\\@Medições de Tempo\\5mb\\5mb_Hash.pdf";
 
 		// Codificacao
 		//degrada.codificacao(localAbsoluto, correcao);		
 
 		// Decodificacao
-		degrada.decodificacao(localAbsolutoCodi, localAbsolutoCorrecao, localAbsolutoHash, correcao);
+		//degrada.decodificacao(localAbsolutoCodi, localAbsolutoCorrecao, localAbsolutoHash, correcao);
 	}
 
 	// Metodo responsavel pela codificacao do RS m = 8, com 15% de correcao
