@@ -42,23 +42,23 @@ import com.google.common.base.Stopwatch;
 	TODO: Disponibilizar diferentes porcentagens de degradacao (5%, 10%, 15%, 20%, 25% e 50%)
 */
 
-public class DegradacaoCorretiva {
+public class ReversibleDegradation {
 
 	public static void main(String[] args)
 			throws NoSuchAlgorithmException, IOException, ReedSolomonException, CardException {			
 		
-		DegradacaoCorretiva degrada = new DegradacaoCorretiva();
-		int correcao = 25;
-		String localAbsoluto = "Z:\\@Projeto-Degradacao-Corretiva\\@Medições de Tempo\\5mb\\5mb.pdf";
-		String localAbsolutoCodi = "Z:\\@Projeto-Degradacao-Corretiva\\@Medições de Tempo\\5mb\\5mb_Codificado.pdf";
-		String localAbsolutoCorrecao = "Z:\\@Projeto-Degradacao-Corretiva\\@Medições de Tempo\\5mb\\5mb_Redundancia.pdf";
-		String localAbsolutoHash = "Z:\\@Projeto-Degradacao-Corretiva\\@Medições de Tempo\\5mb\\5mb_Hash.pdf";
+		ReversibleDegradation degrada = new ReversibleDegradation();
+		int correcao = 15;
+		String localAbsoluto = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\Notes on Coding Theory.pdf";
+		String localAbsolutoCodi = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\Notes on Coding Theory_Codificado.pdf";
+		String localAbsolutoCorrecao = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\Notes on Coding Theory_Redundancia.pdf";
+		String localAbsolutoHash = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\Notes on Coding Theory_Hash.pdf";
 
 		// Codificacao
 		//degrada.codificacao(localAbsoluto, correcao);		
 
 		// Decodificacao
-		//degrada.decodificacao(localAbsolutoCodi, localAbsolutoCorrecao, localAbsolutoHash, correcao);
+		degrada.decodificacao(localAbsolutoCodi, localAbsolutoCorrecao, localAbsolutoHash, correcao);
 	}
 
 	// Metodo responsavel pela codificacao do RS m = 8, com 15% de correcao
@@ -102,7 +102,7 @@ public class DegradacaoCorretiva {
 			System.out.println("Cartão NFC e terminais estão indisponíveis, a aplicaçãos será encerrada!" + "\n");
 			System.exit(0);
 		} else {
-			System.out.println("Cartão NFC e terminais estão disponíveis!" + "\n");
+			System.out.println("System ready to encode" + "\n");
 
 			int n = 255, t = ((n - k) / 2), qtdSimbolosRedundancia = n - k;
 			int incrementoVetorRS8C = 0, incrementoVetorUnico = 0, incrementoVetorCorrecao = 0;
@@ -121,7 +121,7 @@ public class DegradacaoCorretiva {
 			GenericGF gf = new GenericGF(285, 256, 1);
 			ReedSolomonEncoder encoder = new ReedSolomonEncoder(gf);
 
-			System.out.println("Codificacao em andamento..." + "\n");
+			System.out.println("Encoding..." + "\n");
 
 			/*
 			 * Rotina de codificacao A ultima iteracao e tratada separadamente, quando ha
@@ -176,7 +176,7 @@ public class DegradacaoCorretiva {
 				throw new ReedSolomonException(
 						"Erro na codificacao, vetor codificado nao e igual ao vetor do arquivo (em inteiro unsigned)");
 			} else {
-				System.out.println("Arquivo codificado com sucesso! " + "\n");
+				System.out.println("File successfully encoded! " + "\n");
 			}
 
 			// Cria vetor de bytes ja codificados pelo encoder e corrompido t posicoes
@@ -195,9 +195,9 @@ public class DegradacaoCorretiva {
 			byte[] uid = nfc.UID();
 			byte[] hashUID = sha.sha256(uid);
 			ManipularArquivoM8.gravarArquivo(hashUID, localAbsoluto, "Hash");
-			System.out.println("Hash do cartão foi gravado ");
+			System.out.println("Hash file stored" + "\n");
 		}
-		System.out.println("Tempo total de execucao: " + timer.stop());
+		System.out.println("Encoding time: " + timer.stop());
 	}
 
 	// Metodo responsavel pela decodificacao do RS m = 8, com t/n% de correcao
@@ -244,7 +244,7 @@ public class DegradacaoCorretiva {
 			System.out.println("Cartão NFC e terminais estão indisponíveis, a aplicaçãos será encerrada!" + "\n");
 			System.exit(0);
 		} else {
-			System.out.println("Aproxime da leitora o cartão que efetuou a codificação do arquivo" + "\n");
+			System.out.println("Please, superimpose the authorized NFC card to retrive the file" + "\n");
 
 			if (sha.verificaChecksum(localAbsolutoHash, uid) != true) {
 				System.out.println(
@@ -252,11 +252,9 @@ public class DegradacaoCorretiva {
 								+ "\n");
 				System.exit(0);
 			} else {
-				System.out.println(
-						"O cartão presente no terminal é o mesmo que efetuou a codificação, a decodificação será iniciada"
-								+ "\n");
+				System.out.println("Authorized card"+ "\n");
 
-				//while (nfc.cartaoOuTerminalAusentes() != true) {
+				while (nfc.cartaoOuTerminalAusentes() != true) {
 
 					// Com 15% de erro: k=177 Bytes n-k=78 Bytes de redundância t=39
 					int n = 255, t = ((n - k) / 2), qtdSimbolosRedundancia = (n - k), destPos = 0;
@@ -276,7 +274,7 @@ public class DegradacaoCorretiva {
 					GenericGF gf = new GenericGF(285, 256, 1);
 					ReedSolomonDecoder decoder = new ReedSolomonDecoder(gf);
 
-					System.out.println("Decodificacao em andamento..." + "\n");
+					System.out.println("Decoding..." + "\n");
 
 					// Recupera arquivo codificado e redundancia
 					int[] vetorSimbolosCorrecao = new int[((qtdIteracoesRS + 1) * qtdSimbolosRedundancia)];
@@ -326,11 +324,12 @@ public class DegradacaoCorretiva {
 					byte[] decodificado = ManipularArquivoM8.conversaoUnsignedSigned(vetorRS8Decodificado);
 					ManipularArquivoM8.gravarArquivo(decodificado, localAbsolutoArquivoCodificado, "Decodificado");
 					
-				//}
-				//ManipularArquivoM8.deletarArquivos(localAbsolutoArquivoCodificado,
-						//"Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\CertiProf-Scrum-Master_Codificado_Decodificado.pdf",
-						//localAbsolutoHash, localAbsolutoCorrecao);
-				System.out.println("Tempo total de execucao: " + timer.stop());
+				}
+				ManipularArquivoM8.deletarArquivos(localAbsolutoArquivoCodificado,
+						"Z:\\\\@Projeto-Degradacao-Corretiva\\\\Testes-com-RS-GF(2^16)\\\\Notes on Coding Theory_Codificado_Decodificado.pdf",
+						localAbsolutoHash, localAbsolutoCorrecao);
+				
+				System.out.println("Decoding time: " + timer.stop());
 			}
 		}
 		

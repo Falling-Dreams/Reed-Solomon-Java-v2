@@ -197,6 +197,7 @@ public class ManipularArquivoM8 {
 			Files.delete(pathDecodificado);
 			Files.delete(pathHash);
 			Files.delete(pathCorrecao);
+			System.out.println("The files has been successful erased" + "\n");
 
 		} catch (Exception e) {
 			throw new ReedSolomonException("Erro durante a exclusão dos arquivos");
