@@ -15,25 +15,28 @@ Give examples
 
 ### Installing
 
-A step by step series of examples that tell you how to get a development env running
-
-Say what the step will be
+For the environment to work properly, make sure you have installed the guava library and smartcardio built-in module in your packages.
 
 ```
-Give the example
+Java smartcardio https://docs.oracle.com/javase/7/docs/jre/api/security/smartcardio/spec/javax/smartcardio/package-summary.html
+Guava https://github.com/google/guava
 ```
-
-And repeat
+To encode a file you must manually provide a absolute path of the file to be encode and the percentage of the file to be degradeted, up to a maximum of 50% and you must have a NFC card reader with a valid card, the encoded file will be associated with the hash from the card, in that way only the card whom perfomed the encode processing will be enable to access the file. Notice that the higher the percent the more time will be taken to complete the encode processing:
 
 ```
-until finished
+absolutePath: File to be encode
+degradationPercent: Total percentage of the file to be degradeted
 ```
+The degradeted file will be writen in the same folder as the original one.
 
-End with an example of getting some data out of the system or using it for a little demo
+To decode you must provide a degradeted file, the hash of the card whom degradeted the file, the card whom generate the hash. The decoder process is executed as long as a valid card is on the reader, once the card is remove from the reader all the files, except the degradeted one, is remove from the disk.
 
-## Running the tests
-
-Explain how to run the automated tests for this system
+```
+encodedFile: The file encoded and corrupted
+redundancyFile: The file containing the redundacy symbols for correctio
+hashEncoder: The generated hash from the card whom encoded the file
+degradationPercent: Corruption percentage of the file (must match the one in the encoding process)
+```
 
 ## Contributing
 
