@@ -53,10 +53,10 @@ public class ReversibleDegradation {
 		String hash = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\Notes on Coding Theory_Hash.pdf";
 
 		// Encoder
-		//degradation.encoder(absolutePath, degradationPercent);
+		degradation.encoder(absolutePath, degradationPercent);
 
 		// Decoder
-		degradation.decoder(encoded, redundancy, hash, degradationPercent);
+		//degradation.decoder(encoded, redundancy, hash, degradationPercent);
 	}
 
 	/**
@@ -72,9 +72,9 @@ public class ReversibleDegradation {
 	 * positions, redundancy are the symbols of Correction generated at each
 	 * iteration of for, of each vector of the original file.
 	 * 
-	 * @param absolutePath: string representing the file to be degradeted (receives
+	 * @param absolutePath string representing the file to be degradeted (receives
 	 *        any kind of extension, i.e, .pdf, .word, .jpg and etc.)
-	 * @param degradationPercent: total percentage of the file to be degradeted (up
+	 * @param degradationPercent total percentage of the file to be degradeted (up
 	 *        to a maximum of 50%). Notice that the higher the percent, the more the
 	 *        algorithm takes to encoder the file.
 	 * @throws IOException:              if for any reason the data to be degradeted
@@ -123,7 +123,7 @@ public class ReversibleDegradation {
 		SHA256 sha = new SHA256();
 
 		// The encoding process only initiate if a card is present in the reader
-		if (nfc.cartaoOuTerminalAusentes() == true) {
+		if (nfc.cardOrTerminalUnavailable() == true) {
 			System.out.println("NFC card and terminals are unavailable, application will be terminated!" + "\n");
 			System.exit(0);
 		} else {
@@ -136,7 +136,7 @@ public class ReversibleDegradation {
 			int totalSymbols = bytesFromFile.length;
 			int iteractionsRS = totalSymbols / k;
 			int remainingRS = totalSymbols % k;
-			int[] intUnsigned = ManipularArquivoM8.conversaoSignedUnsigned(absolutePath);
+			int[] intUnsigned = ManipularArquivoM8.signedToUnsigned(absolutePath);
 			int[] encodedRS8 = new int[totalSymbols];
 			int[] redundancySmb = new int[((iteractionsRS + 1) * redundacy)];
 			int[] rs8c = new int[255];
@@ -193,22 +193,22 @@ public class ReversibleDegradation {
 
 			// Create vector of bytes already encoded by the encoder and corrupted t
 			// positions
-			byte[] vetorCodificadoSigned = ManipularArquivoM8.conversaoUnsignedSigned(encodedRS8);
-			ManipularArquivoM8.corrompeDado(vetorCodificadoSigned, t, k);
+			byte[] vetorCodificadoSigned = ManipularArquivoM8.unsignedToSigned(encodedRS8);
+			ManipularArquivoM8.corruption(vetorCodificadoSigned, t, k);
 
 			// Create byte vector of redundancy symbols
-			byte[] vetorCorrecaoSigned = ManipularArquivoM8.conversaoUnsignedSigned(redundancySmb);
+			byte[] vetorCorrecaoSigned = ManipularArquivoM8.unsignedToSigned(redundancySmb);
 
 			// Write encoded and corrupted file
-			ManipularArquivoM8.gravarArquivo(vetorCodificadoSigned, absolutePath, "Encoded");
-			ManipularArquivoM8.gravarArquivo(vetorCorrecaoSigned, absolutePath, "Redundancy");
+			ManipularArquivoM8.writeFile(vetorCodificadoSigned, absolutePath, "Encoded");
+			ManipularArquivoM8.writeFile(vetorCorrecaoSigned, absolutePath, "Redundancy");
 
 			// Generate hash of the UID of the card that has encoded by writing the hash to
 			// a text file
 			// in the same location where the file is
 			byte[] uid = nfc.UID();
 			byte[] hashUID = sha.sha256(uid);
-			ManipularArquivoM8.gravarArquivo(hashUID, absolutePath, "Hash");
+			ManipularArquivoM8.writeFile(hashUID, absolutePath, "Hash");
 			System.out.println("Hash file stored" + "\n");
 		}
 		System.out.println("Encoding time: " + timer.stop());
@@ -220,11 +220,11 @@ public class ReversibleDegradation {
 	 * the random erased bytes of the file, every n bytes in the file
 	 * <p>
 	 * 
-	 * @param encodedFile: The file encoded and corrupted
-	 * @param redundancyFile: The file containing the redundacy symbols for
+	 * @param encodedFile The file encoded and corrupted
+	 * @param redundancyFile The file containing the redundacy symbols for
 	 *        correction
-	 * @param hashEncoder: The generated hash from the card whom encoded the file
-	 * @param degradationPercent: Corruption percentage of the file (must match the
+	 * @param hashEncoder The generated hash from the card whom encoded the file
+	 * @param degradationPercent Corruption percentage of the file (must match the
 	 *        one in the encoding process)
 	 * @throws IOException:              if for any reason the data to be degradeted
 	 *                                   it's unavailable in the disk
@@ -271,7 +271,7 @@ public class ReversibleDegradation {
 		byte[] uid = nfc.UID();
 		byte[] hashUID = sha.sha256(uid);
 
-		if (nfc.cartaoOuTerminalAusentes() == true) {
+		if (nfc.cardOrTerminalUnavailable() == true) {
 			System.out.println("NFC card and terminals are unavailable, the application will be terminated!" + "\n");
 			System.exit(0);
 		} else {
@@ -285,7 +285,7 @@ public class ReversibleDegradation {
 			} else {
 				System.out.println("Authorized card" + "\n");
 
-				while (nfc.cartaoOuTerminalAusentes() != true) {
+				while (nfc.cardOrTerminalUnavailable() != true) {
 
 					// With 15% error: k = 177 Bytes n-k = 78 Redundancy bytes t = 39
 					int n = 255, t = ((n - k) / 2), totalRddSymb = (n - k), destPos = 0;
@@ -299,7 +299,7 @@ public class ReversibleDegradation {
 					int destPosRS8D = rs8d.length - totalRddSymb;
 					int incrementRemainder = totalSymb - remainderRS;
 					int srcPosRemainder = iteractionsRS * totalRddSymb;
-					int[] file = ManipularArquivoM8.conversaoSignedUnsigned(encodedFile);
+					int[] file = ManipularArquivoM8.signedToUnsigned(encodedFile);
 					int[] decoderRS8D = new int[totalSymb];
 
 					GenericGF gf = new GenericGF(285, 256, 1);
@@ -309,8 +309,8 @@ public class ReversibleDegradation {
 
 					// Recovers encoded file and redundancy
 					int[] redundancySymb = new int[((iteractionsRS + 1) * totalRddSymb)];
-					redundancySymb = ManipularArquivoM8.conversaoSignedUnsigned(redundancyFile);
-					int[] fromEncoded = ManipularArquivoM8.conversaoSignedUnsigned(encodedFile);
+					redundancySymb = ManipularArquivoM8.signedToUnsigned(redundancyFile);
+					int[] fromEncoded = ManipularArquivoM8.signedToUnsigned(encodedFile);
 
 					// Initiate the decoding process
 					for (int h = 0; h < iteractionsRS; h++) {
@@ -347,11 +347,11 @@ public class ReversibleDegradation {
 					}
 
 					// Save in disk the decoded and corrected file
-					byte[] decodificado = ManipularArquivoM8.conversaoUnsignedSigned(decoderRS8D);
-					ManipularArquivoM8.gravarArquivo(decodificado, encodedFile, "Decodificado");
+					byte[] decodificado = ManipularArquivoM8.unsignedToSigned(decoderRS8D);
+					ManipularArquivoM8.writeFile(decodificado, encodedFile, "Decodificado");
 
 				}
-				ManipularArquivoM8.deletarArquivos(encodedFile,
+				ManipularArquivoM8.eraseFiles(encodedFile,
 						"Z:\\\\@Projeto-Degradacao-Corretiva\\\\Testes-com-RS-GF(2^16)\\\\Notes on Coding Theory_Codificado_Decodificado.pdf",
 						hashEncoder, redundancyFile);
 

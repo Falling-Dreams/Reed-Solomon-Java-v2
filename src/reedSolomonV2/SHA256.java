@@ -1,7 +1,5 @@
 package reedSolomonV2;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -10,52 +8,45 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
-/*
- 	Metodo sha256
-	o que faz? Gera o SHA256 dos bytes informados
-	Parametros: byte[] input, vetor de bytes atraves do qual deseja-se gerar o hash
-	Retorna: byte[] result um vetor de bytes contendo o sha256 do vetor informado
-	
-	Metodo verificaChecksum
-	o que faz? Verifica se o hash gerado na codificaco eh o mesmo do cartao que deseja decodificar o arquivo
-	Parametros: String hashGravadoCodificacao o local onde o hash gravado na codificacao se encontra, 
-	byte[] uidCartao o uid do cartao candidato a decodificacao
-	Retorna: boolean true se o cartao que deseja efetuar a decodificacao foi o mesmo que codificou
-		
-*/
-
 public class SHA256 {
+	/**
+	 * <p>
+	 * Get the sha256 from the provided bytes. Uses the built-in java function.
+	 * <p>
+	 * 
+	 * @param cardUID uid from the card
+	 * @return sha256: The calculated sha256
+	 * @throws NoSuchAlgorithmException: If the selected hash does not exist on java
+	 *                                   built-in modules.
+	 */
 
-	protected byte[] sha256(byte[] uidCartao) throws NoSuchAlgorithmException {
+	protected byte[] sha256(byte[] cardUID) throws NoSuchAlgorithmException {
 		MessageDigest mDigest = MessageDigest.getInstance("SHA-256");
-		byte[] result = mDigest.digest(uidCartao);
+		byte[] sha256 = mDigest.digest(cardUID);
 
-		return result;
+		return sha256;
 	}
 
-	public boolean verificaChecksum(String hashGravadoCodificacao, byte[] uidCartao)
-			throws NoSuchAlgorithmException, IOException {
-		Path path = Paths.get(hashGravadoCodificacao);
+	/**
+	 * <p>
+	 * Checks if the provided card is the same that encoded the file.
+	 * <p>
+	 * 
+	 * @param encoderHash The hash generated in the encoder process.
+	 * @param cardUID     UID from the supposed card, the one whom may encoded the
+	 *                    file.
+	 * @return True if the encoderHash matches the one provided with the card.
+	 * @throws NoSuchAlgorithmException: If the selected hash does not exist on java
+	 *                                   built-in modules.
+	 * @throws IOException:              If the saved hash it's not avaliable in the
+	 *                                   disk.
+	 */
+	public boolean verificaChecksum(String encoderHash, byte[] cardUID) throws NoSuchAlgorithmException, IOException {
+		Path path = Paths.get(encoderHash);
 		byte[] bytesArquivo = Files.readAllBytes(path);
-		byte[] hashGerado = sha256(uidCartao);
+		byte[] hashGerado = sha256(cardUID);
 
 		return Arrays.equals(bytesArquivo, hashGerado);
 	}
-	/*
-	protected File gravarHash(byte[] sha256Gerado, String localAbsoluto) throws IOException {
-
-		String[] diretorioArquivoExtensao = ManipularArquivoM8.recuperoDiretorioNomeExtensao(localAbsoluto);
-		String diretorio = diretorioArquivoExtensao[0];
-		String arquivo = diretorioArquivoExtensao[1];
-		String extensao = ".txt";
-		String arquivoCompleto = diretorio + arquivo + "_" + "Hash_Codificacao" + extensao;
-
-		// Grava o arquivo com o nome fornecido e a extensao lida
-		File newFile = new File(arquivoCompleto);
-		FileOutputStream stream = new FileOutputStream(newFile);
-		stream.write(sha256Gerado);
-		stream.close();
-		return newFile;
-	}*/
 
 }

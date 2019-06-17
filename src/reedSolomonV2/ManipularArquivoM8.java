@@ -11,196 +11,229 @@ import java.nio.file.Path;
 
 public class ManipularArquivoM8 {
 
-	// public static void main(String[] args)
-	// throws IOException, ReedSolomonException, CardException,
-	// NoSuchAlgorithmException {
-	// }
-
-	// O que faz: converte um vetor de bytes signed em um vetor de inteiros unsigned
-	// Entrada: arquivoLido vetor de bytes do arquivo
-	// Retorno: inteirosUnsigned um vetor de inteiros unsigned
-	protected static int[] byteParaIntUnsigned(byte[] arquivoLido) {
-		int tamanhoVetorInt = arquivoLido.length;
-		int valorEmIntDoByte = 0;
-		int[] inteirosUnsigned = new int[tamanhoVetorInt];
-		for (int i = 0; i < tamanhoVetorInt; i++) {
-			valorEmIntDoByte = arquivoLido[i];
-			if (valorEmIntDoByte < 0) {
-				valorEmIntDoByte = valorEmIntDoByte + 256;
+	/**
+	 * <p>
+	 * Transform a vector of signed bytes into an unsigned integer vector
+	 * <p>
+	 * 
+	 * @param file File to be transform
+	 * @return unsignedInt: Vector containing the unsigned bytes
+	 */
+	protected static int[] byteToIntUnsigned(byte[] file) {
+		int fileLen = file.length;
+		int intValue = 0;
+		int[] unsignedInt = new int[fileLen];
+		for (int i = 0; i < fileLen; i++) {
+			intValue = file[i];
+			if (intValue < 0) {
+				intValue = intValue + 256;
 			}
-			inteirosUnsigned[i] = valorEmIntDoByte;
+			unsignedInt[i] = intValue;
 		}
-		return inteirosUnsigned;
+		return unsignedInt;
 	}
 
-	// O que faz: le os bytes de um arquivo informado pelo usuario e
-	// retorna a sua conversao em um vetor de inteiros unsigned
-	// Entrada: arquivoOriginal o local absoluto do arquivo, com nome e extensao
-	// Retorno: bytesEmIntUnsigned um vetor de inteiros unsigned
-	// byte[] -> int[]
-	protected static int[] conversaoSignedUnsigned(String arquivoOriginal) throws IOException {
-		Path path = Paths.get(arquivoOriginal);
+	/**
+	 * <p>
+	 * Reads the bytes of a user-entered file and returns its conversion in an
+	 * unsigned integer vector
+	 * <p>
+	 * 
+	 * @param file The file to be transform into unsigned integer
+	 * @return unsignedInt: Vector containing the conversion
+	 * @throws IOException: if for any reason the file it's unavailable in the disk
+	 */
+	protected static int[] signedToUnsigned(String file) throws IOException {
+		Path path = Paths.get(file);
 		byte[] bytesArquivoLido = Files.readAllBytes(path);
-		int[] bytesEmIntUnsigned = byteParaIntUnsigned(bytesArquivoLido);
-		return bytesEmIntUnsigned;
+		int[] unsignedInt = byteToIntUnsigned(bytesArquivoLido);
+		return unsignedInt;
 	}
 
-	// O que faz: converte um vetor de inteiros unsigned em um vetor de bytes signed
-	// Entrada: vetorIntUnsigned o vetor a ser convertido
-	// Retorno: bytesSigned um vetor de bytes signed
-	// int[] -> byte[]
-	protected static byte[] conversaoUnsignedSigned(int[] vetorIntUnsigned) throws IOException {
-		int valorEmIntDoByte = 0;
-		int tamanho = vetorIntUnsigned.length;
-		byte[] bytesSigned = new byte[tamanho];
-		for (int i = 0; i < bytesSigned.length; ++i) {
-			valorEmIntDoByte = vetorIntUnsigned[i];
-			bytesSigned[i] = byteParaInt(valorEmIntDoByte);
+	/**
+	 * <p>
+	 * Unsigned int to signed byte
+	 * <p>
+	 * 
+	 * @param unsignedInt Integer vector to be transform
+	 * @return signedByte: The transformed signed byte
+	 * @throws IOException: if for any reason the file it's unavailable in the disk
+	 */
+	protected static byte[] unsignedToSigned(int[] unsignedInt) throws IOException {
+		int intByte = 0;
+		int size = unsignedInt.length;
+		byte[] signedByte = new byte[size];
+		for (int i = 0; i < signedByte.length; ++i) {
+			intByte = unsignedInt[i];
+			signedByte[i] = intUnToSig(intByte);
 		}
-		return bytesSigned;
+		return signedByte;
 	}
 
-	// Metodo auxiliar para conversaoUnsignedSigned, transforma um unico inteiro
-	// unsigned em inteiro signed
-	private static byte byteParaInt(int unsigned) {
-		byte valorDoByteEmInt = 0;
+	/**
+	 * <p>
+	 * Transforms a single unsigned integer into signed integer
+	 * <p>
+	 * 
+	 * @param unsigned The unsigned byte
+	 * @return intvalue: The signed int
+	 */
+	private static byte intUnToSig(int unsigned) {
+		byte intvalue = 0;
 		if (unsigned <= 256) {
-			valorDoByteEmInt = (byte) unsigned;
-			if (valorDoByteEmInt > 127) {
-				valorDoByteEmInt = (byte) (valorDoByteEmInt - 256);
+			intvalue = (byte) unsigned;
+			if (intvalue > 127) {
+				intvalue = (byte) (intvalue - 256);
 			}
 		}
-		return valorDoByteEmInt;
+		return intvalue;
 	}
 
-	// O que faz: indentifica a partir de um arquivo informado pelo usuario
-	// o diretorio, o nome e a extensao do arquivo. Usado para gravar em disco
-	// na codificacao, decodificacao, correcao e hash preservando o nome original do
-	// arquivo
-	// Entrada: localAbsoluto contendo o nome e a extensao do arquivo
-	// Retorno: diretorioArquivoExtensao um array de string onde o indice[0] indica
-	// o diretorio
-	// o indice[1] o nome do arquivo e o indice[2] a extensao do arquivo
-	protected static String[] recuperarDiretorioNomeExtensao(String localAbsoluto) {
-		File f = new File(localAbsoluto);
+	/**
+	 * <p>
+	 * Identifies the directory, file name, and file extension from a user-entered
+	 * file. Used to write to disk in encoding, decoding, correction and hash
+	 * preserving the original file name
+	 * <p>
+	 * 
+	 * @param absolutePath String containing the absolute path of the file
+	 * @return directoryFileExtension: an array of string where the index [0]
+	 *         indicates the directory, the index [1] the file name and the index
+	 *         [2] the file extension
+	 */
+	protected static String[] nameExtension(String absolutePath) {
+		File f = new File(absolutePath);
 
-		// Recupera nome e extensao do arquivo
-		String arquivoComExtensao = "";
+		String fileExtension = "";
 		int in = f.getAbsolutePath().lastIndexOf("\\");
 		if (in > -1) {
-			arquivoComExtensao = f.getAbsolutePath().substring(in + 1);
+			fileExtension = f.getAbsolutePath().substring(in + 1);
 		}
-		// Recupera o diretorio onde o arquivo esta armazenado
-		String diretorio = localAbsoluto.replace(arquivoComExtensao, "");
+		// Directory
+		String directory = absolutePath.replace(fileExtension, "");
 
-		// Separa nome e extensao
-		int indiceExtensao = arquivoComExtensao.lastIndexOf('.');
-		int tamanhoNomeExtensao = arquivoComExtensao.length();
-		String extensao = arquivoComExtensao.substring(indiceExtensao, tamanhoNomeExtensao);
-		String arquivo = arquivoComExtensao.substring(0, indiceExtensao);
+		// Get name and extension
+		int extensionIndex = fileExtension.lastIndexOf('.');
+		int sizeNameExtension = fileExtension.length();
+		String extension = fileExtension.substring(extensionIndex, sizeNameExtension);
+		String file = fileExtension.substring(0, extensionIndex);
 
-		// Armazena diretorio, nome do arquivo e extensao do arquivo em um array de
-		// strings
-		String[] diretorioArquivoExtensao = new String[3];
-		diretorioArquivoExtensao[0] = diretorio;
-		diretorioArquivoExtensao[1] = arquivo;
-		diretorioArquivoExtensao[2] = extensao;
+		// Stores directory, file name, and file extension in an array of strings
+		String[] directoryFileExtension = new String[3];
+		directoryFileExtension[0] = directory;
+		directoryFileExtension[1] = file;
+		directoryFileExtension[2] = extension;
 
-		return diretorioArquivoExtensao;
+		return directoryFileExtension;
 	}
 
-	// o que faz: grava arquivo em disco
-	// Entrada: bytesArquivo vetor de bytes a serem gravados, localAbsoluto local
-	// onde o arquivo sera gravado
-	// sufixoArquivo o sufixo que o arquivo recebera apos o nome e antes da extensao
-	// Retorno: newFile o arquivo gerado
-	protected static File gravarArquivo(byte[] bytesArquivo, String localAbsoluto, String sufixoArquivo)
-			throws IOException {
+	/**
+	 * <p>
+	 * Write file to disk
+	 * <p>
+	 * 
+	 * @param fileBytes    vector of bytes to be written
+	 * @param absolutePath location where the file will be saved
+	 * @param fileSufix    the suffix that the file will receive after the name and
+	 *                     before the extension
+	 * @return newFile the generated file
+	 * @throws IOException: if for any reason the file it's unavailable in the disk
+	 */
+	protected static File writeFile(byte[] fileBytes, String absolutePath, String fileSufix) throws IOException {
 
-		String[] diretorioArquivoExtensao = recuperarDiretorioNomeExtensao(localAbsoluto);
-		String diretorio = diretorioArquivoExtensao[0];
-		String arquivo = diretorioArquivoExtensao[1];
-		String extensao = diretorioArquivoExtensao[2];
-		String arquivoCompleto = diretorio + arquivo + "_" + sufixoArquivo + extensao;
+		String[] directoryFileExtension = nameExtension(absolutePath);
+		String directory = directoryFileExtension[0];
+		String file = directoryFileExtension[1];
+		String extension = directoryFileExtension[2];
+		String fullFile = directory + file + "_" + fileSufix + extension;
 
-		// Grava o arquivo com o nome fornecido e a extensao lida
-		File newFile = new File(arquivoCompleto);
+		// Writes the file with the given name and read extension
+		File newFile = new File(fullFile);
 		FileOutputStream stream = new FileOutputStream(newFile);
-		stream.write(bytesArquivo);
+		stream.write(fileBytes);
 		stream.close();
 		return newFile;
 	}
 
-	// O que faz: Corrompe t% do arquivo com bytes randomicos
-	// Entrada: bytesArquivo o vetor do arquivo que sera corrompido, t a quantidade
-	// de erros que serão gerados
-	// Retorno: void
-	// Obs cada vetor precisa de uma variavel de incremento separada
-	protected static void corrompeDado(byte[] bytesArquivo, int t, int k) {
-		//int k = 177;
+	/**
+	 * <p>
+	 * Corrupts t% of file with random bytes
+	 * <p>
+	 * 
+	 * @param file the vector of the file that will be corrupted
+	 * @param t    the number of errors that will be generated for every n bytes
+	 * @param k    Information symbols each vector needs a separate increment
+	 *             variable
+	 */
+	protected static void corruption(byte[] file, int t, int k) {
+		// int k = 177;
 		SecureRandom random = new SecureRandom();
-		int qtdIteracoes = bytesArquivo.length / k;
-		int resto = bytesArquivo.length % k;
-		int incrementoVetorDados = 0;
-		int incrementoVetorCorrupcao = 0;
-		int inicioCopiaResto = bytesArquivo.length - resto;
-		int indiceAleatorioVetorK = random.nextInt(k);;
-		int indiceAleatorioVetorCorrupcao = 0;
-		byte[] vetorTempCorrupcao = new byte[k];		
-		byte[] corrupcao = new byte[t];
-		random.nextBytes(corrupcao);
+		int interactions = file.length / k;
+		int remainder = file.length % k;
+		int incrementData = 0;
+		int incrementCorruption = 0;
+		int startRmndCopy = file.length - remainder;
+		int randomIndex = random.nextInt(k);
+		int randomIndexCorru = 0;
+		byte[] tempCorru = new byte[k];
+		byte[] corruption = new byte[t];
+		random.nextBytes(corruption);
 
-		// Divido o vetor original em um vetor de k posicoes, conforme o numero de
-		// iteracoes
-		for (int x = 0; x < qtdIteracoes; x++) {
+		// The original vector is divided into a vector of k positions, according to the
+		// number of iterations
+		for (int x = 0; x < interactions; x++) {
 
-			System.arraycopy(bytesArquivo, incrementoVetorDados, vetorTempCorrupcao, 0, k);
-			incrementoVetorDados += k;
+			System.arraycopy(file, incrementData, tempCorru, 0, k);
+			incrementData += k;
 
-			// A cada k simbolos do arquivo original, corrompo t posicoes aleatorias
-			// dessas k posicoes
+			// Every k symbol of the original file, corrupted t random positions of these k
+			// positions
 			for (int n = 0; n < t; n++) {
-				//indiceAleatorioVetorK = getIndiceAleatorioVetorK(random);
-				indiceAleatorioVetorCorrupcao = random.nextInt(corrupcao.length);
-				System.arraycopy(corrupcao, indiceAleatorioVetorCorrupcao, vetorTempCorrupcao, indiceAleatorioVetorK,
-						1);
+				randomIndexCorru = random.nextInt(corruption.length);
+				System.arraycopy(corruption, randomIndexCorru, tempCorru, randomIndex, 1);
 			}
-			// Devolvo o vetor original, agora, corrompido t posicoes aleatorias a cada k
-			// simbolos
-			System.arraycopy(vetorTempCorrupcao, 0, bytesArquivo, incrementoVetorCorrupcao, k);
-			incrementoVetorCorrupcao += k;
+			// Returns the original vector, now corrupted t random positions every k symbols
+			System.arraycopy(tempCorru, 0, file, incrementCorruption, k);
+			incrementCorruption += k;
 		}
-		if (resto > 0) {
-			byte[] vetorRestoTempCorrupcao = new byte[resto];
-			System.arraycopy(bytesArquivo, inicioCopiaResto, vetorRestoTempCorrupcao, 0, resto);
-			for (int m = 0; m < resto; m++) {
-				indiceAleatorioVetorCorrupcao = random.nextInt(corrupcao.length);
-				System.arraycopy(corrupcao, indiceAleatorioVetorCorrupcao, bytesArquivo, inicioCopiaResto, 1);
+		if (remainder > 0) {
+			byte[] remainderTempCorr = new byte[remainder];
+			System.arraycopy(file, startRmndCopy, remainderTempCorr, 0, remainder);
+			for (int m = 0; m < remainder; m++) {
+				randomIndexCorru = random.nextInt(corruption.length);
+				System.arraycopy(corruption, randomIndexCorru, file, startRmndCopy, 1);
 			}
 		}
 	}
-	
-	// O que faz: Deleta os arquivos codificado, decodificado, correcao e hash
-	// Entrada: os locais absolutos com nome do arquivo e extensao
-	// Retorno: void
-	// Exceção: Caso não seja possivel excluir o arquivo
-	protected static void deletarArquivos(String codificado, String decodificado, String hash, String correcao)
+
+	/**
+	 * <p>
+	 * Erases the encoded, the decoded, redundancy and hash on the disk
+	 * <p>
+	 * 
+	 * @param encoded    The file encoded by the RS encoder
+	 * @param decoded    The file decoded by the RS decoder
+	 * @param hash       The hash generated in the encoder process
+	 * @param redundancy The error correction symbols, stored in a file
+	 * @throws ReedSolomonException: If the files are not available to be erase
+	 */
+	protected static void eraseFiles(String encoded, String decoded, String hash, String redundancy)
 			throws ReedSolomonException {
 		// FileLock lock = channel.lock();
 		try {
-			Path pathCodificado = Paths.get(codificado);
-			Path pathDecodificado = Paths.get(decodificado);
+			Path pathEncoded = Paths.get(encoded);
+			Path pathDecoded = Paths.get(decoded);
 			Path pathHash = Paths.get(hash);
-			Path pathCorrecao = Paths.get(correcao);
+			Path pathRedundancy = Paths.get(redundancy);
 
-			Files.delete(pathCodificado);
-			Files.delete(pathDecodificado);
+			Files.delete(pathEncoded);
+			Files.delete(pathDecoded);
 			Files.delete(pathHash);
-			Files.delete(pathCorrecao);
+			Files.delete(pathRedundancy);
 			System.out.println("The files has been successful erased" + "\n");
 
 		} catch (Exception e) {
-			throw new ReedSolomonException("Erro durante a exclusão dos arquivos");
+			throw new ReedSolomonException("Error while erasing files");
 		}
 	}
 }
