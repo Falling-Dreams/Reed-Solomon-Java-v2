@@ -7,7 +7,7 @@ import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import javax.smartcardio.CardException;
-import reedSolomonV2.ManipularArquivoM8;
+import reedSolomonV2.FileHandle;
 import com.google.common.base.Stopwatch;
 
 /**
@@ -117,7 +117,7 @@ public class ReversibleDegradation {
 		}
 
 		// Class to manipulate nfc
-		ManipulaNFC nfc = new ManipulaNFC();
+		NFCHandle nfc = new NFCHandle();
 
 		// Generates the sha256
 		SHA256 sha = new SHA256();
@@ -136,7 +136,7 @@ public class ReversibleDegradation {
 			int totalSymbols = bytesFromFile.length;
 			int iteractionsRS = totalSymbols / k;
 			int remainingRS = totalSymbols % k;
-			int[] intUnsigned = ManipularArquivoM8.signedToUnsigned(absolutePath);
+			int[] intUnsigned = FileHandle.signedToUnsigned(absolutePath);
 			int[] encodedRS8 = new int[totalSymbols];
 			int[] redundancySmb = new int[((iteractionsRS + 1) * redundacy)];
 			int[] rs8c = new int[255];
@@ -193,22 +193,22 @@ public class ReversibleDegradation {
 
 			// Create vector of bytes already encoded by the encoder and corrupted t
 			// positions
-			byte[] vetorCodificadoSigned = ManipularArquivoM8.unsignedToSigned(encodedRS8);
-			ManipularArquivoM8.corruption(vetorCodificadoSigned, t, k);
+			byte[] vetorCodificadoSigned = FileHandle.unsignedToSigned(encodedRS8);
+			FileHandle.corruption(vetorCodificadoSigned, t, k);
 
 			// Create byte vector of redundancy symbols
-			byte[] vetorCorrecaoSigned = ManipularArquivoM8.unsignedToSigned(redundancySmb);
+			byte[] vetorCorrecaoSigned = FileHandle.unsignedToSigned(redundancySmb);
 
 			// Write encoded and corrupted file
-			ManipularArquivoM8.writeFile(vetorCodificadoSigned, absolutePath, "Encoded");
-			ManipularArquivoM8.writeFile(vetorCorrecaoSigned, absolutePath, "Redundancy");
+			FileHandle.writeFile(vetorCodificadoSigned, absolutePath, "Encoded");
+			FileHandle.writeFile(vetorCorrecaoSigned, absolutePath, "Redundancy");
 
 			// Generate hash of the UID of the card that has encoded by writing the hash to
 			// a text file
 			// in the same location where the file is
 			byte[] uid = nfc.UID();
 			byte[] hashUID = sha.sha256(uid);
-			ManipularArquivoM8.writeFile(hashUID, absolutePath, "Hash");
+			FileHandle.writeFile(hashUID, absolutePath, "Hash");
 			System.out.println("Hash file stored" + "\n");
 		}
 		System.out.println("Encoding time: " + timer.stop());
@@ -265,7 +265,7 @@ public class ReversibleDegradation {
 			break;
 		}
 
-		ManipulaNFC nfc = new ManipulaNFC();
+		NFCHandle nfc = new NFCHandle();
 		SHA256 sha = new SHA256();
 
 		byte[] uid = nfc.UID();
@@ -299,7 +299,7 @@ public class ReversibleDegradation {
 					int destPosRS8D = rs8d.length - totalRddSymb;
 					int incrementRemainder = totalSymb - remainderRS;
 					int srcPosRemainder = iteractionsRS * totalRddSymb;
-					int[] file = ManipularArquivoM8.signedToUnsigned(encodedFile);
+					int[] file = FileHandle.signedToUnsigned(encodedFile);
 					int[] decoderRS8D = new int[totalSymb];
 
 					GenericGF gf = new GenericGF(285, 256, 1);
@@ -309,8 +309,8 @@ public class ReversibleDegradation {
 
 					// Recovers encoded file and redundancy
 					int[] redundancySymb = new int[((iteractionsRS + 1) * totalRddSymb)];
-					redundancySymb = ManipularArquivoM8.signedToUnsigned(redundancyFile);
-					int[] fromEncoded = ManipularArquivoM8.signedToUnsigned(encodedFile);
+					redundancySymb = FileHandle.signedToUnsigned(redundancyFile);
+					int[] fromEncoded = FileHandle.signedToUnsigned(encodedFile);
 
 					// Initiate the decoding process
 					for (int h = 0; h < iteractionsRS; h++) {
@@ -347,11 +347,11 @@ public class ReversibleDegradation {
 					}
 
 					// Save in disk the decoded and corrected file
-					byte[] decodificado = ManipularArquivoM8.unsignedToSigned(decoderRS8D);
-					ManipularArquivoM8.writeFile(decodificado, encodedFile, "Decodificado");
+					byte[] decodificado = FileHandle.unsignedToSigned(decoderRS8D);
+					FileHandle.writeFile(decodificado, encodedFile, "Decodificado");
 
 				}
-				ManipularArquivoM8.eraseFiles(encodedFile,
+				FileHandle.eraseFiles(encodedFile,
 						"Z:\\\\@Projeto-Degradacao-Corretiva\\\\Testes-com-RS-GF(2^16)\\\\Notes on Coding Theory_Codificado_Decodificado.pdf",
 						hashEncoder, redundancyFile);
 

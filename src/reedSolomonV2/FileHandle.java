@@ -9,7 +9,7 @@ import java.security.SecureRandom;
 import javax.smartcardio.CardException;
 import java.nio.file.Path;
 
-public class ManipularArquivoM8 {
+public class FileHandle {
 
 	/**
 	 * <p>

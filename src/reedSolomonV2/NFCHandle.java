@@ -5,7 +5,7 @@ import javax.smartcardio.*;
 
 import com.google.common.base.Stopwatch;
 
-public class ManipulaNFC {
+public class NFCHandle {
 
 	/**
 	 * <p>
