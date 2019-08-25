@@ -21,8 +21,7 @@ public class Sandbox {
 		//Path path = Paths.get(redundancy);
 		//byte[] bytesFile = Files.readAllBytes(path);
 		//System.out.println(Arrays.toString(bytesFile));
-		int x = 100;
-		System.out.println(Integer.toString(x, 2));
+		
 
 	}
 
