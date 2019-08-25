@@ -16,10 +16,6 @@
 
 package reedSolomonV2;
 
-import java.util.Arrays;
-
-import reedSolomonV2.*;
-
 
 /**
  * <p>Implements Reed-Solomon decoding, as the name implies.</p>

@@ -6,7 +6,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import javax.smartcardio.CardException;
 import reedSolomonV2.FileHandle;
 import com.google.common.base.Stopwatch;
 
@@ -15,8 +14,8 @@ import com.google.common.base.Stopwatch;
  * Implements the meaningless reversible degradation, with Reed-Solomon and Near
  * Field Communication
  * </p>
- * With m = 8, Default Primitive Polynomial=D^8 + D^4 + D^3 + D^2 + 1; Integer
- * Representation=285. A PC card reader is necessary for the correct
+ * Default Primitive Polynomial=D^16 + D^12 + D^3 + D + 1; Integer
+ * Representation = 69643. A PC card reader is necessary for the correct
  * implementation of the meaningless reversible degradation.
  * 
  * @author Kevin de Santana
@@ -55,7 +54,7 @@ public class ReversibleDegradationM16 {
 	 * @throws NoSuchAlgorithmException: default sha256 exception
 	 */
 	protected void encoder(String absolutePath, int degradationPercent)
-			throws IOException, ReedSolomonException, CardException, NoSuchAlgorithmException {
+			throws IOException, ReedSolomonException, NoSuchAlgorithmException {
 
 		// Instance the Stopwatch from guava library, to measure the total runtime of
 		// enconder processing
@@ -65,120 +64,100 @@ public class ReversibleDegradationM16 {
 		int k = 0;
 		switch (degradationPercent) {
 		case 5:
-			k = 229;
+			k = 58983;
 			break;
 		case 10:
-			k = 203;
+			k = 0;
 			break;
 		case 15:
-			k = 177;
+			k = 0;
 			break;
 		case 20:
-			k = 151;
+			k = 0;
 			break;
 		case 25:
-			k = 125;
+			k = 0;
 			break;
 		case 50:
-			k = 5;
+			k = 0;
 			break;
 		}
+		
+		System.out.println("System ready to encode" + "\n");
 
-		// Class to manipulate nfc
-		NFCHandle nfc = new NFCHandle();
+		int n = 65535, t = ((n - k) / 2), redundacy = n - k;		
+		int incrementRS8C = 0, incrementTotalVector = 0, incrementCorrVec = 0;
+		Path path = Paths.get(absolutePath);
+		byte[] bytesFromFile = Files.readAllBytes(path);
+		int totalSymbols = bytesFromFile.length;
+		int iteractionsRS = totalSymbols / k;
+		int remainingRS = totalSymbols % k;
+		int[] intUnsigned = FileHandle.signedToUnsigned(absolutePath);
+		int[] encodedRS8 = new int[totalSymbols];
+		int[] redundancySmb = new int[((iteractionsRS + 1) * redundacy)];
+		int[] rs8c = new int[n];
+		int sourcePosRemain = totalSymbols - remainingRS;
+		int destPosRdd = iteractionsRS * redundacy;
 
-		// Generates the sha256
-		SHA256 sha = new SHA256();
+		GenericGF gf = new GenericGF(69643, 65536, 1);
+		ReedSolomonEncoder encoder = new ReedSolomonEncoder(gf);
 
-		// The encoding process only initiate if a card is present in the reader
-		if (nfc.cardOrTerminalUnavailable() == true) {
-			System.out.println("NFC card and terminals are unavailable, application will be terminated!" + "\n");
-			System.exit(0);
-		} else {
-			System.out.println("System ready to encode" + "\n");
+		System.out.println("Encoding..." + "\n");
 
-			int n = 255, t = ((n - k) / 2), redundacy = n - k;
-			int incrementRS8C = 0, incrementTotalVector = 0, incrementCorrVec = 0;
-			Path path = Paths.get(absolutePath);
-			byte[] bytesFromFile = Files.readAllBytes(path);
-			int totalSymbols = bytesFromFile.length;
-			int iteractionsRS = totalSymbols / k;
-			int remainingRS = totalSymbols % k;
-			int[] intUnsigned = FileHandle.signedToUnsigned(absolutePath);
-			int[] encodedRS8 = new int[totalSymbols];
-			int[] redundancySmb = new int[((iteractionsRS + 1) * redundacy)];
-			int[] rs8c = new int[255];
-			int sourcePosRemain = totalSymbols - remainingRS;
-			int destPosRdd = iteractionsRS * redundacy;
+		// At each iteration the rs8c receives k symbols from the original file
+		// The remaining n-k positions are reserved for generating the correction
+		// symbols of these k symbols
+		for (int h = 0; h < iteractionsRS; h++) {
+			System.arraycopy(intUnsigned, incrementRS8C, rs8c, 0, k);
+			incrementRS8C += k;
 
-			GenericGF gf = new GenericGF(285, 256, 1);
-			ReedSolomonEncoder encoder = new ReedSolomonEncoder(gf);
+			// Once filled in, the correction symbols of the RS8C vector are generated from
+			// the encoder processing
+			encoder.encode(rs8c, redundacy);			
 
-			System.out.println("Encoding..." + "\n");
+			// The k symbols encoded by the RS8 at each iteration are stored in a single
+			// vector
+			System.arraycopy(rs8c, 0, encodedRS8, incrementTotalVector, k);
+			incrementTotalVector += k;
 
-			// At each iteration the rs8c receives k symbols from the original file
-			// The remaining n-k positions are reserved for generating the correction
-			// symbols of these k symbols
-			for (int h = 0; h < iteractionsRS; h++) {
-				System.arraycopy(intUnsigned, incrementRS8C, rs8c, 0, k);
-				incrementRS8C += k;
-
-				// Once filled in, the correction symbols of the RS8C vector are generated from
-				// the encoder processing
-				encoder.encode(rs8c, redundacy);
-
-				// The k symbols encoded by the RS8 at each iteration are stored in a single
-				// vector
-				System.arraycopy(rs8c, 0, encodedRS8, incrementTotalVector, k);
-				incrementTotalVector += k;
-
-				// The n-k correction symbols encoded by RS8 are stored in a single vector
-				System.arraycopy(rs8c, k, redundancySmb, incrementCorrVec, redundacy);
-				incrementCorrVec += redundacy;
-
-			}
-			// Treatment for the case where remainingRS > 0
-			// Additional vector is created only when there is remainder in the division
-			if (remainingRS > 0) {
-				int[] remainingRS8C = new int[255]; // New vector for the remainder symbols
-				// Copy of k vector remainder symbols file for the remainingRS8C
-				System.arraycopy(intUnsigned, sourcePosRemain, remainingRS8C, 0, remainingRS);
-				// Encoding of the remainder symbols, the coding is done independently of the
-				// rest, will always be coded k symbols (even the zeros)
-				encoder.encode(remainingRS8C, redundacy);
-				// Copy of k vector remainder symbols file for the encodedRS8
-				System.arraycopy(remainingRS8C, 0, encodedRS8, sourcePosRemain, remainingRS);
-				// Copy of remainder correction symbols for the redundancySmb
-				System.arraycopy(remainingRS8C, k, redundancySmb, destPosRdd, redundacy);
-			}
-
-			if (Arrays.equals(intUnsigned, encodedRS8) != true) {
-				throw new ReedSolomonException(
-						"Error in coding, coded vector is not equal to file vector (in unsigned integer)");
-			} else {
-				System.out.println("File successfully encoded! " + "\n");
-			}
-
-			// Create vector of bytes already encoded by the encoder and corrupted t
-			// positions
-			byte[] vetorCodificadoSigned = FileHandle.unsignedToSigned(encodedRS8);
-			FileHandle.corruption(vetorCodificadoSigned, t, k);
-
-			// Create byte vector of redundancy symbols
-			byte[] vetorCorrecaoSigned = FileHandle.unsignedToSigned(redundancySmb);
-
-			// Write encoded and corrupted file
-			FileHandle.writeFile(vetorCodificadoSigned, absolutePath, "Encoded");
-			FileHandle.writeFile(vetorCorrecaoSigned, absolutePath, "Redundancy");
-
-			// Generate hash of the UID of the card that has encoded by writing the hash to
-			// a text file
-			// in the same location where the file is
-			byte[] uid = nfc.UID();
-			byte[] hashUID = sha.sha256(uid);
-			FileHandle.writeFile(hashUID, absolutePath, "Hash");
-			System.out.println("Hash file stored" + "\n");
+			// The n-k correction symbols encoded by RS8 are stored in a single vector
+			System.arraycopy(rs8c, k, redundancySmb, incrementCorrVec, redundacy);
+			incrementCorrVec += redundacy;
 		}
+		// Treatment for the case where remainingRS > 0
+		// Additional vector is created only when there is remainder in the division
+		if (remainingRS > 0) {
+			int[] remainingRS8C = new int[n]; // New vector for the remainder symbols
+			// Copy of k vector remainder symbols file for the remainingRS8C
+			System.arraycopy(intUnsigned, sourcePosRemain, remainingRS8C, 0, remainingRS);
+			// Encoding of the remainder symbols, the coding is done independently of the
+			// rest, will always be coded k symbols (even the zeros)
+			encoder.encode(remainingRS8C, redundacy);
+			// Copy of k vector remainder symbols file for the encodedRS8
+			System.arraycopy(remainingRS8C, 0, encodedRS8, sourcePosRemain, remainingRS);
+			// Copy of remainder correction symbols for the redundancySmb
+			System.arraycopy(remainingRS8C, k, redundancySmb, destPosRdd, redundacy);
+		}
+
+		if (Arrays.equals(intUnsigned, encodedRS8) != true) {
+			throw new ReedSolomonException(
+					"Error in coding, coded vector is not equal to file vector (in unsigned integer)");
+		} else {
+			System.out.println("File successfully encoded! " + "\n");
+		}
+
+		// Create vector of bytes already encoded by the encoder and corrupted t
+		// positions
+		byte[] vetorCodificadoSigned = FileHandle.unsignedToSigned(encodedRS8);
+		FileHandle.corruption(vetorCodificadoSigned, t, k);
+
+		// Create byte vector of redundancy symbols
+		byte[] vetorCorrecaoSigned = FileHandle.unsignedToSigned(redundancySmb);
+
+		// Write encoded and corrupted file
+		FileHandle.writeFile(vetorCodificadoSigned, absolutePath, "Encoded");
+		FileHandle.writeFile(vetorCorrecaoSigned, absolutePath, "Redundancy");
+
 		System.out.println("Encoding time: " + timer.stop());
 	}
 
@@ -204,8 +183,8 @@ public class ReversibleDegradationM16 {
 	 *                                   or if the reader itself is unavailable
 	 * @throws NoSuchAlgorithmException: default sha256 exception
 	 */
-	protected void decoder(String absolutePath, String encodedFile, String redundancyFile, String hashEncoder,
-			int degradationPercent) throws IOException, ReedSolomonException, CardException, NoSuchAlgorithmException {
+	protected void decoder(String absolutePath, String encodedFile, String redundancyFile, int degradationPercent)
+			throws IOException, ReedSolomonException, NoSuchAlgorithmException {
 
 		// Instance the Stopwatch from guava library, to count the total runtime of
 		// deconder processing
@@ -215,122 +194,103 @@ public class ReversibleDegradationM16 {
 		int k = 0;
 		switch (degradationPercent) {
 		case 5:
-			k = 229;
+			k = 58983;
 			break;
 		case 10:
-			k = 203;
+			k = 0;
 			break;
 		case 15:
-			k = 177;
+			k = 0;
 			break;
 		case 20:
-			k = 151;
+			k = 0;
 			break;
 		case 25:
-			k = 125;
+			k = 0;
 			break;
 		case 50:
-			k = 5;
+			k = 0;
 			break;
 		}
 
-		NFCHandle nfc = new NFCHandle();
-		SHA256 sha = new SHA256();
-		byte[] uid = nfc.UID();
-		byte[] hashUID = sha.sha256(uid);
 		boolean writeFile = true;
-		String decoded = "Z:\\\\@Projeto-Degradacao-Corretiva\\\\Testes-com-RS-GF(2^16)\\\\TCC1_v1.0.2_Encoded_Decoded.pdf";
 
-		if (nfc.cardOrTerminalUnavailable() == true) {
-			System.out.println("NFC card and terminals are unavailable, the application will be terminated!" + "\n");
-			System.exit(0);
+		System.out.println("Decoding..." + "\n");
+
+		// With 15% error: k = 177 Bytes n-k = 78 Redundancy bytes t = 39
+		int n = 65535, totalRddSymb = (n - k), destPos = 0;		
+		int srcPosDec = 0, incrementRdd = 0;
+		Path path = Paths.get(encodedFile);
+		byte[] bytesFile = Files.readAllBytes(path);
+		int totalSymb = bytesFile.length;
+		int iteractionsRS = totalSymb / k;
+		int remainderRS = totalSymb % k;
+		int[] rs8d = new int[n];
+		int destPosRS8D = rs8d.length - totalRddSymb;
+		int incrementRemainder = totalSymb - remainderRS;
+		int srcPosRemainder = iteractionsRS * totalRddSymb;
+		int[] file = FileHandle.signedToUnsigned(encodedFile);
+		int[] decoderRS8D = new int[totalSymb];
+
+		GenericGF gf = new GenericGF(69643, 65536, 1);
+		ReedSolomonDecoder decoder = new ReedSolomonDecoder(gf);
+
+		// Recovers encoded file and redundancy
+		int[] redundancySymb = new int[((iteractionsRS + 1) * totalRddSymb)];
+		redundancySymb = FileHandle.signedToUnsigned(redundancyFile);
+		int[] fromEncoded = FileHandle.signedToUnsigned(encodedFile);
+
+		// Initiate the decoding process
+		for (int h = 0; h < iteractionsRS; h++) {
+
+			// Break single vector of symbols encoded in 255 vectors
+			// Copy 177 information symbols to the vectorRS8D
+			System.arraycopy(fromEncoded, incrementRdd, rs8d, 0, k);
+			incrementRdd += k;
+
+			// Concatenating Data with Redundancy and Decoding
+			System.arraycopy(redundancySymb, destPos, rs8d, destPosRS8D, totalRddSymb);
+			destPos += totalRddSymb;
+
+			// Decoder
+			decoder.decode(rs8d, totalRddSymb);
+
+			// Save what was decoded into a single vector to write the decoded file
+			System.arraycopy(rs8d, 0, decoderRS8D, srcPosDec, k);
+			srcPosDec += k;
+		}
+		// Remainder
+		if (remainderRS > 0) {
+			int[] rs8dRemainder = new int[n]; // decoder remainder
+			// Copy k rest symbols to rs8dRemainder
+			System.arraycopy(fromEncoded, incrementRemainder, rs8dRemainder, 0, remainderRS);
+			// Copy n-k rest symbols to rs8dRemainder
+			System.arraycopy(redundancySymb, srcPosRemainder, rs8dRemainder, k, totalRddSymb);
+			// Decoder process of the remainder
+			decoder.decode(rs8dRemainder, totalRddSymb);
+			// Copy of k remainder symbols for single vector
+			System.arraycopy(rs8dRemainder, 0, decoderRS8D, incrementRemainder, remainderRS);
+			// Copy of n-k remainder correction symbols for single vector
+			System.arraycopy(rs8dRemainder, k, redundancySymb, srcPosRemainder, totalRddSymb);
+		}
+		
+		if (Arrays.equals(file, decoderRS8D) != true) {
+			throw new ReedSolomonException(
+					"Erro na decodificacao, vetor decodificado nao e igual ao vetor do arquivo (em inteiro unsigned)");
 		} else {
-			System.out.println("Please, superimpose the authorized NFC card to retrive the file" + "\n");
-
-			if (sha.verificaChecksum(hashEncoder, uid) != true) {
-				System.out.println(
-						"The card present in the terminal is not the same as the encoding, the application will be closed"
-								+ "\n");
-				System.exit(0);
-			} else {
-				System.out.println("Authorized card" + "\n");
-
-				while (nfc.cardOrTerminalUnavailable() != true) {
-
-					System.out.println("Decoding..." + "\n");
-
-					// With 15% error: k = 177 Bytes n-k = 78 Redundancy bytes t = 39
-					int n = 255, t = ((n - k) / 2), totalRddSymb = (n - k), destPos = 0;
-					int srcPosDec = 0, incrementRdd = 0;
-					Path path = Paths.get(encodedFile);
-					byte[] bytesFile = Files.readAllBytes(path);
-					int totalSymb = bytesFile.length;
-					int iteractionsRS = totalSymb / k;
-					int remainderRS = totalSymb % k;
-					int[] rs8d = new int[255];
-					int destPosRS8D = rs8d.length - totalRddSymb;
-					int incrementRemainder = totalSymb - remainderRS;
-					int srcPosRemainder = iteractionsRS * totalRddSymb;
-					int[] file = FileHandle.signedToUnsigned(encodedFile);
-					int[] decoderRS8D = new int[totalSymb];
-
-					GenericGF gf = new GenericGF(285, 256, 1);
-					ReedSolomonDecoder decoder = new ReedSolomonDecoder(gf);
-
-					// Recovers encoded file and redundancy
-					int[] redundancySymb = new int[((iteractionsRS + 1) * totalRddSymb)];
-					redundancySymb = FileHandle.signedToUnsigned(redundancyFile);
-					int[] fromEncoded = FileHandle.signedToUnsigned(encodedFile);
-
-					// Initiate the decoding process
-					for (int h = 0; h < iteractionsRS; h++) {
-
-						// Break single vector of symbols encoded in 255 vectors
-						// Copy 177 information symbols to the vectorRS8D
-						System.arraycopy(fromEncoded, incrementRdd, rs8d, 0, k);
-						incrementRdd += k;
-
-						// Concatenating Data with Redundancy and Decoding
-						System.arraycopy(redundancySymb, destPos, rs8d, destPosRS8D, totalRddSymb);
-						destPos += totalRddSymb;
-
-						// Decoder
-						decoder.decode(rs8d, totalRddSymb);
-
-						// Save what was decoded into a single vector to write the decoded file
-						System.arraycopy(rs8d, 0, decoderRS8D, srcPosDec, k);
-						srcPosDec += k;
-					}
-					// Remainder
-					if (remainderRS > 0) {
-						int[] rs8dRemainder = new int[255]; // decoder remainder
-						// Copy k rest symbols to rs8dRemainder
-						System.arraycopy(fromEncoded, incrementRemainder, rs8dRemainder, 0, remainderRS);
-						// Copy n-k rest symbols to rs8dRemainder
-						System.arraycopy(redundancySymb, srcPosRemainder, rs8dRemainder, k, totalRddSymb);
-						// Decoder process of the remainder
-						decoder.decode(rs8dRemainder, totalRddSymb);
-						// Copy of k remainder symbols for single vector
-						System.arraycopy(rs8dRemainder, 0, decoderRS8D, incrementRemainder, remainderRS);
-						// Copy of n-k remainder correction symbols for single vector
-						System.arraycopy(rs8dRemainder, k, redundancySymb, srcPosRemainder, totalRddSymb);
-					}
-
-					if (writeFile == true) {
-						// Save the decoded file
-						byte[] decodificado = FileHandle.unsignedToSigned(decoderRS8D);
-						FileHandle.writeFile(decodificado, encodedFile, "Decoded");
-						System.out.println("File decoded and avaliable in disk" + "\n");
-					}
-					writeFile = false;
-
-				}
-				FileHandle.eraseFiles(absolutePath, decoded, hashEncoder, redundancyFile);
-
-				System.out.println("Decoding time: " + timer.stop());
-			}
+			System.out.println("Arquivo decodificado com sucesso! ");
 		}
 
+		if (writeFile == true) {
+			// Save the decoded file
+			byte[] decodificado = FileHandle.unsignedToSigned(decoderRS8D);
+			FileHandle.writeFile(decodificado, encodedFile, "Decoded");
+			System.out.println("File decoded and avaliable in disk" + "\n");
+		}
+		writeFile = false;
+
 	}
+
+	// System.out.println("Encoding time: " + timer.stop());
 
 }

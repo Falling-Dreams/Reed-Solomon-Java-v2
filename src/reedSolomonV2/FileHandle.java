@@ -80,10 +80,10 @@ public class FileHandle {
 	 */
 	private static byte intUnToSig(int unsigned) {
 		byte intvalue = 0;
-		if (unsigned <= 256) {
+		if (unsigned <= 65535) {
 			intvalue = (byte) unsigned;
-			if (intvalue > 127) {
-				intvalue = (byte) (intvalue - 256);
+			if (intvalue > 32767) {
+				intvalue = (byte) (intvalue - 65535);
 			}
 		}
 		return intvalue;
@@ -166,7 +166,7 @@ public class FileHandle {
 	 *             variable
 	 */
 	protected static void corruption(byte[] file, int t, int k) {
-		// int k = 177;
+		
 		SecureRandom random = new SecureRandom();
 		int interactions = file.length / k;
 		int remainder = file.length % k;
