@@ -144,20 +144,16 @@ public class ReversibleDegradationM16 {
 					"Error in coding, coded vector is not equal to file vector (in unsigned integer)");
 		} else {
 			System.out.println("File successfully encoded! " + "\n");
-		}
-
-		// Create vector of bytes already encoded by the encoder and corrupted t
-		// positions
+		}		
+		
 		byte[] vetorCodificadoSigned = FileHandle.unsignedToSigned(encodedRS8);
-		FileHandle.corruption(vetorCodificadoSigned, t, k);
-
-		// Create byte vector of redundancy symbols
-		byte[] vetorCorrecaoSigned = FileHandle.unsignedToSigned(redundancySmb);
-
-		// Write encoded and corrupted file
+		FileHandle.corruption(vetorCodificadoSigned, t, k);		
+		
+		// Mudar daqui ate a gravacao do arquivo para comportar m = 16
+		byte[] vetorCorrecaoSigned = FileHandle.unsignedToSigned(redundancySmb);	
+		
 		FileHandle.writeFile(vetorCodificadoSigned, absolutePath, "Encoded");
 		FileHandle.writeFile(vetorCorrecaoSigned, absolutePath, "Redundancy");
-
 		System.out.println("Encoding time: " + timer.stop());
 	}
 

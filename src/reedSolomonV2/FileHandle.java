@@ -80,10 +80,10 @@ public class FileHandle {
 	 */
 	private static byte intUnToSig(int unsigned) {
 		byte intvalue = 0;
-		if (unsigned <= 65535) {
+		if (unsigned <= 256) {
 			intvalue = (byte) unsigned;
-			if (intvalue > 32767) {
-				intvalue = (byte) (intvalue - 65535);
+			if (intvalue > 127) {
+				intvalue = (byte) (intvalue - 256);
 			}
 		}
 		return intvalue;
@@ -166,7 +166,7 @@ public class FileHandle {
 	 *             variable
 	 */
 	protected static void corruption(byte[] file, int t, int k) {
-		
+
 		SecureRandom random = new SecureRandom();
 		int interactions = file.length / k;
 		int remainder = file.length % k;
@@ -235,5 +235,98 @@ public class FileHandle {
 		} catch (Exception e) {
 			throw new ReedSolomonException("Error while erasing files");
 		}
+	}
+
+	/**
+	 * <p>
+	 * Transform a 16-bit string into a 8-bit string 
+	 * <p>
+	 * 
+	 * @param redundancyM16 The n-k redundancy symbols from the m = 16 RS
+	 * @return binary8 The decimal transform of the MSB and LSB binary simbols, in
+	 *         the first half the MSB integer representation, and on the half + 1
+	 *         the LSB integer representation of the 16-bin
+	 */
+
+	protected static int[] bin16ToBin8(int[] redundancyM16) {
+		int[] binary8 = new int[redundancyM16.length * 2];
+		int temp = 0;
+		String[] binary16 = new String[redundancyM16.length]; // int to bin
+		for (int i = 0; i < redundancyM16.length; i++) {
+			temp = redundancyM16[i];
+			String bin = Integer.toBinaryString(0x10000 | temp).substring(1); // the binary will always be of length 16
+			binary16[i] = bin;
+		}
+		String left = "";
+		String right = "";
+		int msb = 0;
+		int lsb = 0;
+		int incrementLSB = binary8.length / 2;
+		for (int i = 0; i < binary16.length; i++) {
+			// Each variable will hold a part of the 16-bit number
+			// Left will receive the MSB part and right the LSB
+			left = binary16[i].substring(0, 8);
+			right = binary16[i].substring(8, 16);
+
+			// Here the 8 digit binary is transform into a integer number
+			msb = Integer.parseInt(left, 2);
+			lsb = Integer.parseInt(right, 2);
+
+			// The array contain the MSB part of the 16 digit binary number on the 0th
+			// position to the half and the LSB part on the half + 1 to the the end of the
+			// array
+			binary8[i] = msb;
+			binary8[incrementLSB] = lsb;
+			incrementLSB += 1;
+		}
+		return binary8;
+
+	}
+
+	/**
+	 * <p>
+	 * Transform a 8-bit integer into a 16-bit integer. Concatenating the first half
+	 * with the second half i.e, padding the MSB part with the LSB part of the
+	 * 16-bit, and then transform the resulting binary number into a integer number
+	 * <p>
+	 * 
+	 * @param redudancy The array containing the integer redundancy symbols
+	 * @return intM16 The transformed integer redundancy symbols from 16-bit binary
+	 *         number
+	 */
+	protected static int[] intM16(int[] redudancy) {
+		String[] binary = FileHandle.intToBin(redudancy);
+		String left = "";
+		int rightControl = binary.length / 2;
+		String right = "";
+		String[] leftRight = new String[binary.length / 2];
+		int[] intM16 = new int[binary.length / 2];
+		for (int i = 0; i < binary.length / 2; i++) {
+			left = binary[i];
+			right = binary[rightControl];
+			rightControl += 1;
+			leftRight[i] = left + right; // pad the MSB with the LSB
+			intM16[i] = Integer.parseInt(leftRight[i], 2); // string to int
+		}
+		return intM16;
+	}
+
+	/**
+	 * <p>
+	 * Transform a single integer into a 8-bit binary number
+	 * <p>
+	 * 
+	 * @param redundancy The array containing the integer redundancy symbols
+	 * @return binary String array containing the 8-bit binary number
+	 */
+	protected static String[] intToBin(int[] redundancy) {
+		int temp = 0;
+		String[] binary = new String[redundancy.length];
+		for (int i = 0; i < redundancy.length; i++) {
+			temp = redundancy[i];
+			String bin = Integer.toBinaryString(0x100 | temp).substring(1); // 8-bit binary number
+			binary[i] = bin;
+		}
+		return binary;
 	}
 }

@@ -27,17 +27,17 @@ public class Main {
 	public static void main(String[] args)
 			throws NoSuchAlgorithmException, IOException, ReedSolomonException, CardException {
 
-		ReversibleDegradationM16 degradation = new ReversibleDegradationM16();
-		int degradationPercent = 5;
-		String absolutePath = "Z:\\The Art of Data Hiding with Reed-Solomon Error Correcting Codes.pdf";
-		String encoded = "Z:\\The Art of Data Hiding with Reed-Solomon Error Correcting Codes_Encoded.pdf";
-		String redundancy = "Z:\\The Art of Data Hiding with Reed-Solomon Error Correcting Codes_Redundancy.pdf";		
+		ReversibleDegradation degradation = new ReversibleDegradation();
+		int degradationPercent = 5, m = 16;
+		String absolutePath = "Z:\\matrizes.pdf";
+		String encoded = "Z:\\matrizes_Encoded.pdf";
+		String redundancy = "Z:\\matrizes_Redundancy.pdf";		
 
 		// Encoder
-		degradation.encoder(absolutePath, degradationPercent);
+		//degradation.encoder(absolutePath, degradationPercent, m);
 
 		// Decoder
-		//degradation.decoder(absolutePath, encoded, redundancy, degradationPercent);
+		degradation.decoder(absolutePath, encoded, redundancy, degradationPercent, m);
 
 	}
 
