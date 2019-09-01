@@ -22,22 +22,24 @@ public class Main {
 	 * @throws CardException            pc card reader default exception, if for any
 	 *                                  reason there is no card in the reader or if
 	 *                                  the reader itself is unavailable
+	 * @throws InterruptedException 
 	 */
 
 	public static void main(String[] args)
-			throws NoSuchAlgorithmException, IOException, ReedSolomonException, CardException {
+			throws NoSuchAlgorithmException, IOException, ReedSolomonException, CardException, InterruptedException {
 
 		ReversibleDegradation degradation = new ReversibleDegradation();
 		int degradationPercent = 5, m = 16;
 		String absolutePath = "Z:\\matrizes.pdf";
 		String encoded = "Z:\\matrizes_Encoded.pdf";
-		String redundancy = "Z:\\matrizes_Redundancy.pdf";		
+		String redundancy = "Z:\\matrizes_Redundancy.pdf";
+		String hash = "Z:\\matrizes_Hash.pdf";
 
 		// Encoder
 		//degradation.encoder(absolutePath, degradationPercent, m);
 
 		// Decoder
-		degradation.decoder(absolutePath, encoded, redundancy, degradationPercent, m);
+		degradation.decoder(absolutePath, encoded, redundancy, hash, degradationPercent, m);
 
 	}
 

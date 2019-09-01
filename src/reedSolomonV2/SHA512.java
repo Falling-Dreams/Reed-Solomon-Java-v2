@@ -23,7 +23,6 @@ public class SHA512 {
 	protected byte[] sha512(byte[] cardUID) throws NoSuchAlgorithmException {
 		MessageDigest mDigest = MessageDigest.getInstance("SHA-512");
 		byte[] sha512 = mDigest.digest(cardUID);
-
 		return sha512;
 	}
 
