@@ -40,7 +40,7 @@ public class SHA512 {
 	 * @throws IOException:              If the saved hash it's not avaliable in the
 	 *                                   disk.
 	 */
-	public boolean verificaChecksum(String encoderHash, byte[] cardUID) throws NoSuchAlgorithmException, IOException {
+	public boolean checksum(String encoderHash, byte[] cardUID) throws NoSuchAlgorithmException, IOException {
 		Path path = Paths.get(encoderHash);
 		byte[] bytesArquivo = Files.readAllBytes(path);
 		byte[] hashGerado = sha512(cardUID);

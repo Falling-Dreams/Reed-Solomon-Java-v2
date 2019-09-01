@@ -36,10 +36,10 @@ public class Main {
 		String hash = "Z:\\matrizes_Hash.pdf";
 
 		// Encoder
-		//degradation.encoder(absolutePath, degradationPercent, m);
+		degradation.encoder(absolutePath, degradationPercent, m);
 
 		// Decoder
-		degradation.decoder(absolutePath, encoded, redundancy, hash, degradationPercent, m);
+		//degradation.decoder(absolutePath, encoded, redundancy, hash, degradationPercent, m);
 
 	}
 

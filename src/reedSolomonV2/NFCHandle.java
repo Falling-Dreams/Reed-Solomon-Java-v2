@@ -34,7 +34,14 @@ public class NFCHandle {
 			System.arraycopy(responseBytes, 0, uid, 0, 4);
 
 		} catch (Exception e) {
-			throw new ReedSolomonException("Could not read card");
+			TerminalFactory factory = TerminalFactory.getDefault();
+			List<CardTerminal> terminals = factory.terminals().list();
+			CardTerminal term = terminals.get(0);			
+			if (term.isCardPresent() == false) {
+				System.out.println("Waiting to read card");
+				term.waitForCardAbsent(100000);
+			}
+			
 		}		
 		return uid;
 	}
@@ -49,14 +56,13 @@ public class NFCHandle {
 	 * @throws CardException        Only for the correct execution of the method.
 	 * @throws ReedSolomonException If card or reader are not available.
 	 */
-	protected boolean cardOrTerminalUnavailable() throws CardException, ReedSolomonException {
+	protected boolean terminalUnavailable() throws CardException, ReedSolomonException {
 		Boolean isAbsent = false;
 		try {
 			TerminalFactory factory = TerminalFactory.getDefault();
 			List<CardTerminal> terminals = factory.terminals().list();
-			CardTerminal term = terminals.get(0);
-
-			if (term.isCardPresent() == false || terminals.isEmpty() == true) {
+			CardTerminal term = terminals.get(0);			
+			if (terminals.isEmpty() == true) {
 				isAbsent = true;
 			}
 

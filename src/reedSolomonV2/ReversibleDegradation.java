@@ -107,19 +107,19 @@ public class ReversibleDegradation {
 					k = 58983;
 					break;
 				case 10:
-					k = 0;
+					k = 52431;
 					break;
 				case 15:
-					k = 0;
+					k = 45879;
 					break;
 				case 20:
-					k = 0;
+					k = 39327;
 					break;
 				case 25:
-					k = 0;
+					k = 32775;
 					break;
 				case 50:
-					k = 0;
+					k = 15;
 					break;
 				}
 			}
@@ -127,7 +127,7 @@ public class ReversibleDegradation {
 		}
 		NFCHandle nfc = new NFCHandle();
 		SHA512 sha = new SHA512();
-		if (nfc.cardOrTerminalUnavailable() == true) {
+		if (nfc.terminalUnavailable() == true) {
 			System.out.println("NFC card and terminals are unavailable, application will be terminated!" + "\n");
 			System.exit(0);
 		} else {
@@ -229,7 +229,7 @@ public class ReversibleDegradation {
 	 *                                  reason there is no card in the reader or if
 	 *                                  the reader itself is unavailable
 	 * @throws NoSuchAlgorithmException default sha256 exception
-	 * @throws InterruptedException 
+	 * @throws InterruptedException
 	 */
 	protected void decoder(String absolutePath, String encodedFile, String redundancyFile, String hashEncoder,
 			int degradationPercent, int m)
@@ -280,38 +280,43 @@ public class ReversibleDegradation {
 					k = 58983;
 					break;
 				case 10:
-					k = 0;
+					k = 52431;
 					break;
 				case 15:
-					k = 0;
+					k = 45879;
 					break;
 				case 20:
-					k = 0;
+					k = 39327;
 					break;
 				case 25:
-					k = 0;
+					k = 32775;
 					break;
 				case 50:
-					k = 0;
+					k = 15;
 					break;
 				}
 			}
 
 		}
-
+		TerminalFactory factory = TerminalFactory.getDefault();
+		List<CardTerminal> terminals = factory.terminals().list();
+		CardTerminal term = terminals.get(0);
+		while (term.isCardPresent() == false) {
+			System.out.println("No card on the reader, please insert a card" + "\n");
+			TimeUnit.SECONDS.sleep(2);
+		}
 		NFCHandle nfc = new NFCHandle();
 		SHA512 sha = new SHA512();
 		byte[] uid = nfc.UID();
-		byte[] hashUID = sha.sha512(uid);
 		boolean writeFile = true;
 
-		if (nfc.cardOrTerminalUnavailable() == true) {
+		if (nfc.terminalUnavailable() == true) {
 			System.out.println("NFC card and terminals are unavailable, the application will be terminated!" + "\n");
 			System.exit(0);
 		} else {
 			System.out.println("Please, superimpose the authorized NFC card to retrive the file" + "\n");
 			TimeUnit.SECONDS.sleep(2);
-			if (sha.verificaChecksum(hashEncoder, uid) != true) {
+			if (sha.checksum(hashEncoder, uid) != true) {
 				System.out.println(
 						"The card present in the terminal is not the same as the encoding, the application will be closed"
 								+ "\n");
@@ -319,27 +324,33 @@ public class ReversibleDegradation {
 			} else {
 				System.out.println("Authorized card" + "\n");
 				TimeUnit.SECONDS.sleep(2);
-				
-				TerminalFactory factory = TerminalFactory.getDefault();
-				List<CardTerminal> terminals = factory.terminals().list();
-				CardTerminal term = terminals.get(0);
-				Card card = term.connect("*");
-				int contador = 0;
+				/*
+				 * TerminalFactory factory = TerminalFactory.getDefault(); List<CardTerminal>
+				 * terminals = factory.terminals().list(); CardTerminal term = terminals.get(0);
+				 * Card card = term.connect("*");
+				 */
+				int checkCard = 0;
 
-				System.out.println(
-						"To initiate the decode process, superimpose the card two times in the reader under one minute"
-								+ "\n");
+				System.out
+						.println("To initiate the decode process, superimpose the card two times in the reader" + "\n");
 				TimeUnit.SECONDS.sleep(2);
-				
+
 				while (term.waitForCardAbsent(100000) == true) {
 					if (term.waitForCardPresent(100) == true) {
-						contador += 1;
+						byte[] supose = nfc.UID();
+						if (sha.checksum(hashEncoder, supose) != true) {
+							System.out.println(
+									"The card present in the terminal is not the same as the encoding, the application will be closed"
+											+ "\n");
+							System.exit(0);
+						}
+						checkCard += 1;
 					}
 
-					if (contador == 2) {
-						
+					if (checkCard == 2) {
+
 						System.out.println("Card superimpose two times, initializing decode processing..." + "\n");
-						
+
 						int totalRddSymb = (n - k), destPosRdd = 0;
 						int srcPosDec = 0, incrementRdd = 0;
 						Path path = Paths.get(encodedFile);
