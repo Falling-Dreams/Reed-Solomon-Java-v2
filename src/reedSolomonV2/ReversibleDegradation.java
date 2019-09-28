@@ -62,7 +62,7 @@ public class ReversibleDegradation {
 	protected void encoder(String absolutePath, int degradationPercent, int m)
 			throws IOException, ReedSolomonException, NoSuchAlgorithmException, CardException {
 
-		// measure the total runtime of enconde processing
+		// measure the total runtime of encode processing
 		Stopwatch timer = new Stopwatch();
 		timer.start();
 
