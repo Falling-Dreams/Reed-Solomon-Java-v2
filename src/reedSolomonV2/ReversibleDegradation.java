@@ -19,7 +19,7 @@ import com.google.common.base.Stopwatch;
  * Representation=285. A PC card reader is necessary for the correct
  * implementation of the meaningless reversible degradation.
  * 
- * @author Kevin de Santana
+ * @author Kevin de Santana Araujo
  *
  */
 
