@@ -217,16 +217,16 @@ public class FileHandle {
 	 * @param redundancy The error correction symbols, stored in a file
 	 * @throws ReedSolomonException: If the files are not available to be erase
 	 */
-	protected static void eraseFiles(String absolutePath, String decoded, String hash, String redundancy)
+	protected static void eraseFiles(String decoded, String hash, String redundancy)
 			throws ReedSolomonException {
 		// FileLock lock = channel.lock();
 		try {
-			Path pathFile = Paths.get(absolutePath);
+			
 			Path pathDecoded = Paths.get(decoded);
 			Path pathHash = Paths.get(hash);
 			Path pathRedundancy = Paths.get(redundancy);
 
-			Files.delete(pathFile);
+			
 			Files.delete(pathDecoded);
 			Files.delete(pathHash);
 			Files.delete(pathRedundancy);

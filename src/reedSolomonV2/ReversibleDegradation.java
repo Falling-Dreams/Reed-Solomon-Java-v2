@@ -236,16 +236,14 @@ public class ReversibleDegradation {
 
 		NFCHandle nfc = new NFCHandle();
 		SHA256 sha = new SHA256();
-		byte[] uid = nfc.UID();
-		byte[] hashUID = sha.sha256(uid);
-		boolean writeFile = true;
-		String decoded = "Z:\\\\@Projeto-Degradacao-Corretiva\\\\Testes-com-RS-GF(2^16)\\\\TCC1_v1.0.2_Encoded_Decoded.pdf";
+		byte[] uid = nfc.UID();		
+		boolean writeFile = true;		
 
 		if (nfc.cardOrTerminalUnavailable() == true) {
 			System.out.println("NFC card and terminals are unavailable, the application will be terminated!" + "\n");
 			System.exit(0);
 		} else {
-			System.out.println("Please, superimpose the authorized NFC card to retrive the file" + "\n");
+			System.out.println("Please, superimpose the authorized NFC card to retrieve the file" + "\n");
 
 			if (sha.verificaChecksum(hashEncoder, uid) != true) {
 				System.out.println(
@@ -260,7 +258,7 @@ public class ReversibleDegradation {
 					System.out.println("Decoding..." + "\n");
 
 					// With 15% error: k = 177 Bytes n-k = 78 Redundancy bytes t = 39
-					int n = 255, t = ((n - k) / 2), totalRddSymb = (n - k), destPos = 0;
+					int n = 255, totalRddSymb = (n - k), destPos = 0;
 					int srcPosDec = 0, incrementRdd = 0;
 					Path path = Paths.get(encodedFile);
 					byte[] bytesFile = Files.readAllBytes(path);
@@ -271,7 +269,6 @@ public class ReversibleDegradation {
 					int destPosRS8D = rs8d.length - totalRddSymb;
 					int incrementRemainder = totalSymb - remainderRS;
 					int srcPosRemainder = iteractionsRS * totalRddSymb;
-					int[] file = FileHandle.signedToUnsigned(encodedFile);
 					int[] decoderRS8D = new int[totalSymb];
 
 					GenericGF gf = new GenericGF(285, 256, 1);
@@ -321,13 +318,19 @@ public class ReversibleDegradation {
 						byte[] decodificado = FileHandle.unsignedToSigned(decoderRS8D);
 						FileHandle.writeFile(decodificado, encodedFile, "Decoded");
 						System.out.println("File decoded and avaliable in disk" + "\n");
+						System.out.println("Decoding time: " + timer.stop() + "\n");
 					}
 					writeFile = false;
 
-				}
-				FileHandle.eraseFiles(absolutePath, decoded, hashEncoder, redundancyFile);
-
-				System.out.println("Decoding time: " + timer.stop());
+				} 
+				
+				// Erases the decoded, hash an redundacy files
+				String[] directoryFileExtension = FileHandle.nameExtension(absolutePath);
+				String directory = directoryFileExtension[0];
+				String file = directoryFileExtension[1];
+				String extension = directoryFileExtension[2];
+				String decoded = directory + file + "_" + "Encoded_Decoded" + extension;
+				FileHandle.eraseFiles(decoded, hashEncoder, redundancyFile);				
 			}
 		}
 

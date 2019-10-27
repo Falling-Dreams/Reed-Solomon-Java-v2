@@ -25,17 +25,16 @@ public class Main {
 
 		ReversibleDegradation degradation = new ReversibleDegradation();
 		int degradationPercent = 15;
-		String absolutePath = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\TCC1_v1.0.2.pdf";
-		String encoded = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\TCC1_v1.0.2_Encoded.pdf";
-		String redundancy = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\TCC1_v1.0.2_Redundancy.pdf";
-		String hash = "Z:\\@Projeto-Degradacao-Corretiva\\Testes-com-RS-GF(2^16)\\TCC1_v1.0.2_Hash.pdf";
+		String absolutePath = "Z:\\Engenharia\\10º Semestre(2.2019)\\4. TCC II\\Apresentação\\TCCII_v1.0.1_FINAL.pdf";
+		String encoded = "Z:\\Engenharia\\10º Semestre(2.2019)\\4. TCC II\\Apresentação\\TCCII_v1.0.1_FINAL_Encoded.pdf";
+		String redundancy = "Z:\\Engenharia\\10º Semestre(2.2019)\\4. TCC II\\Apresentação\\TCCII_v1.0.1_FINAL_Redundancy.pdf";
+		String hash = "Z:\\Engenharia\\10º Semestre(2.2019)\\4. TCC II\\Apresentação\\TCCII_v1.0.1_FINAL_Hash.pdf";
 
 		// Encoder
-		degradation.encoder(absolutePath, degradationPercent);
+		//degradation.encoder(absolutePath, degradationPercent);
 
 		// Decoder
-		// degradation.decoder(absolutePath, encoded, redundancy, hash,
-		// degradationPercent);
+		degradation.decoder(absolutePath, encoded, redundancy, hash, degradationPercent);
 
 	}
 
