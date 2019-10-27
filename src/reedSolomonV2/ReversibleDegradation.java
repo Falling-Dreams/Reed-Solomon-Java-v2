@@ -330,7 +330,7 @@ public class ReversibleDegradation {
 				String file = directoryFileExtension[1];
 				String extension = directoryFileExtension[2];
 				String decoded = directory + file + "_" + "Encoded_Decoded" + extension;
-				FileHandle.eraseFiles(decoded, hashEncoder, redundancyFile);				
+				FileHandle.eraseFiles(absolutePath, decoded, hashEncoder, redundancyFile);				
 			}
 		}
 

@@ -25,10 +25,10 @@ public class Main {
 
 		ReversibleDegradation degradation = new ReversibleDegradation();
 		int degradationPercent = 15;
-		String absolutePath = "Z:\\Engenharia\\10º Semestre(2.2019)\\4. TCC II\\Apresentação\\TCCII_v1.0.1_FINAL.pdf";
-		String encoded = "Z:\\Engenharia\\10º Semestre(2.2019)\\4. TCC II\\Apresentação\\TCCII_v1.0.1_FINAL_Encoded.pdf";
-		String redundancy = "Z:\\Engenharia\\10º Semestre(2.2019)\\4. TCC II\\Apresentação\\TCCII_v1.0.1_FINAL_Redundancy.pdf";
-		String hash = "Z:\\Engenharia\\10º Semestre(2.2019)\\4. TCC II\\Apresentação\\TCCII_v1.0.1_FINAL_Hash.pdf";
+		String absolutePath = "C:\\Users\\Kevin\\Desktop\\TCCII_v1.0.1_FINAL.pdf";
+		String encoded = "C:\\Users\\Kevin\\Desktop\\TCCII_v1.0.1_FINAL_Encoded.pdf";
+		String redundancy = "C:\\Users\\Kevin\\Desktop\\TCCII_v1.0.1_FINAL_Redundancy.pdf";
+		String hash = "C:\\Users\\Kevin\\Desktop\\TCCII_v1.0.1_FINAL_Hash.pdf";
 
 		// Encoder
 		//degradation.encoder(absolutePath, degradationPercent);
