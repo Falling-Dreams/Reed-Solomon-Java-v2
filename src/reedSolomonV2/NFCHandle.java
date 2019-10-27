@@ -13,9 +13,9 @@ public class NFCHandle {
 	 * confirmation from the reader. Uses the java smartcardio buit-in library.
 	 * <p>
 	 * 
-	 * @return responseBytes: Vector with the UID bytes.
-	 * @throws CardException:        Only for the correct execution of the method.
-	 * @throws ReedSolomonException: If card or reader are not available.
+	 * @return responseBytes: 			array with the UID bytes.
+	 * @throws CardException:        	Only for the correct execution of the method.
+	 * @throws ReedSolomonException: 	If card or reader are not available.
 	 */
 
 	protected byte[] UID() throws CardException, ReedSolomonException {
@@ -42,12 +42,12 @@ public class NFCHandle {
 
 	/**
 	 * <p>
-	 * Checks if a card is whether or not present in the reader.
+	 * Checks if a card is present on the reader.
 	 * <p>
 	 * 
-	 * @return isAbsent: Boolean to know if a card is present in the reader
-	 * @throws CardException:        Only for the correct execution of the method.
-	 * @throws ReedSolomonException: If card or reader are not available.
+	 * @return isAbsent: 				flag to store whether or not a card is present on the reader
+	 * @throws CardException:        	Only for the correct execution of the method.
+	 * @throws ReedSolomonException: 	If card or reader are not available.
 	 */
 	protected boolean cardOrTerminalUnavailable() throws CardException, ReedSolomonException {
 		Boolean isAbsent = false;

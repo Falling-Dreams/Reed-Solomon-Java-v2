@@ -11,7 +11,7 @@ import java.util.Arrays;
 public class SHA256 {
 	/**
 	 * <p>
-	 * Get the sha256 from the provided bytes. Uses the built-in java function.
+	 * Get the sha256 from the given bytes. Uses the built-in java function.
 	 * <p>
 	 * 
 	 * @param cardUID uid from the card
@@ -32,10 +32,9 @@ public class SHA256 {
 	 * Checks if the provided card is the same that encoded the file.
 	 * <p>
 	 * 
-	 * @param encoderHash The hash generated in the encoder process.
-	 * @param cardUID     UID from the supposed card, the one whom may encoded the
-	 *                    file.
-	 * @return True if the encoderHash matches the one provided with the card.
+	 * @param encoderHash 	The hash generated in the encoder process.
+	 * @param cardUID     	UID from the superimposed card
+	 * @return 				True if the encoderHash matches the one provided with the card.
 	 * @throws NoSuchAlgorithmException: If the selected hash does not exist on java
 	 *                                   built-in modules.
 	 * @throws IOException:              If the saved hash it's not avaliable in the

@@ -12,8 +12,8 @@ import com.google.common.base.Stopwatch;
 
 /**
  * <p>
- * Implements the meaningless reversible degradation, with Reed-Solomon and Near
- * Field Communication
+ * Implements the meaningless reversible degradation, with Reed-Solomon
+ * systematic error correction code and Near Field Communication
  * </p>
  * With m = 8, Default Primitive Polynomial=D^8 + D^4 + D^3 + D^2 + 1; Integer
  * Representation=285. A PC card reader is necessary for the correct

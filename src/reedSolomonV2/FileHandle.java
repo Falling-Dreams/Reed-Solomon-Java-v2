@@ -13,11 +13,11 @@ public class FileHandle {
 
 	/**
 	 * <p>
-	 * Transform a vector of signed bytes into an unsigned integer vector
+	 * Signed bytes array to unsigned integer array
 	 * <p>
 	 * 
-	 * @param file File to be transform
-	 * @return unsignedInt: Vector containing the unsigned bytes
+	 * @param file to be converted
+	 * @return unsignedInt array containing the unsigned bytes
 	 */
 	protected static int[] byteToIntUnsigned(byte[] file) {
 		int fileLen = file.length;
@@ -35,13 +35,13 @@ public class FileHandle {
 
 	/**
 	 * <p>
-	 * Reads the bytes of a user-entered file and returns its conversion in an
-	 * unsigned integer vector
+	 * Reads the bytes of an user-entered file and returns its conversion in an
+	 * unsigned integer array
 	 * <p>
 	 * 
-	 * @param file The file to be transform into unsigned integer
-	 * @return unsignedInt: Vector containing the conversion
-	 * @throws IOException: if for any reason the file it's unavailable in the disk
+	 * @param file The file to be converted into unsigned integer
+	 * @return unsignedInt array containing the conversion
+	 * @throws IOException if for any reason the file it's unavailable in the disk
 	 */
 	protected static int[] signedToUnsigned(String file) throws IOException {
 		Path path = Paths.get(file);
@@ -55,8 +55,8 @@ public class FileHandle {
 	 * Unsigned int to signed byte
 	 * <p>
 	 * 
-	 * @param unsignedInt Integer vector to be transform
-	 * @return signedByte: The transformed signed byte
+	 * @param unsignedInt Integer array to be converted
+	 * @return signedByte: The converted signed byte
 	 * @throws IOException: if for any reason the file it's unavailable in the disk
 	 */
 	protected static byte[] unsignedToSigned(int[] unsignedInt) throws IOException {
@@ -72,7 +72,7 @@ public class FileHandle {
 
 	/**
 	 * <p>
-	 * Transforms a single unsigned integer into signed integer
+	 * Converts a single unsigned integer into signed integer
 	 * <p>
 	 * 
 	 * @param unsigned The unsigned byte
@@ -91,12 +91,12 @@ public class FileHandle {
 
 	/**
 	 * <p>
-	 * Identifies the directory, file name, and file extension from a user-entered
-	 * file. Used to write to disk in encoding, decoding, correction and hash
-	 * preserving the original file name
+	 * Extracts the directory, file name, and file extension from a user-entered
+	 * file. Used to save the encoding, decoding, correction and hash files
+	 * preserving the original file structure
 	 * <p>
 	 * 
-	 * @param absolutePath String containing the absolute path of the file
+	 * @param absolutePath String representing the absolute path of the file
 	 * @return directoryFileExtension: an array of string where the index [0]
 	 *         indicates the directory, the index [1] the file name and the index
 	 *         [2] the file extension
@@ -129,10 +129,10 @@ public class FileHandle {
 
 	/**
 	 * <p>
-	 * Write file to disk
+	 * Save file to disk
 	 * <p>
 	 * 
-	 * @param fileBytes    vector of bytes to be written
+	 * @param fileBytes    array of bytes to be save
 	 * @param absolutePath location where the file will be saved
 	 * @param fileSufix    the suffix that the file will receive after the name and
 	 *                     before the extension
@@ -160,9 +160,9 @@ public class FileHandle {
 	 * Corrupts t% of file with random bytes
 	 * <p>
 	 * 
-	 * @param file the vector of the file that will be corrupted
+	 * @param file to be corrupted, in an array of bytes
 	 * @param t    the number of errors that will be generated for every n bytes
-	 * @param k    Information symbols each vector needs a separate increment
+	 * @param k    Information symbols each array needs a separate increment
 	 *             variable
 	 */
 	protected static void corruption(byte[] file, int t, int k) {
