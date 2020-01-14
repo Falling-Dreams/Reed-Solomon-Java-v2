@@ -1,8 +1,6 @@
 package reedSolomonV2;
 
-import reedSolomonV2.*;
-
-
+import java.util.Arrays;
 
 /**
  * <p>Represents a polynomial whose coefficients are elements of a GF.
@@ -50,7 +48,7 @@ final class GenericGFPoly {
 	            this.coefficients.length);
 	      }
 	    } else {
-	      this.coefficients = coefficients;
+	      this.coefficients = coefficients;	      
 	    }
 	  }
 

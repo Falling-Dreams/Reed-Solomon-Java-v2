@@ -47,6 +47,8 @@ public final class ReedSolomonEncoder {
 	      throw new IllegalArgumentException("No data bytes provided");
 	    }
 	    GenericGFPoly generator = buildGenerator(ecBytes);
+	    System.out.println(generator);
+	    System.out.println(cachedGenerators);
 	    int[] infoCoefficients = new int[dataBytes];
 	    System.arraycopy(toEncode, 0, infoCoefficients, 0, dataBytes);
 	    GenericGFPoly info = new GenericGFPoly(field, infoCoefficients);
@@ -58,10 +60,7 @@ public final class ReedSolomonEncoder {
 	      toEncode[dataBytes + i] = 0;
 	    }
 	    System.arraycopy(coefficients, 0, toEncode, dataBytes + numZeroCoefficients, coefficients.length);
-	    
-	    
-		//System.out.println("\n" + "Depois da codificacao: " + "\n" + Arrays.toString(toEncode));
-		//System.out.println("Quantidade de simbolos: " + toEncode.length);
+
 	  }
 
 	}

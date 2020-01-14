@@ -25,16 +25,16 @@ public class Main {
 
 		ReversibleDegradation degradation = new ReversibleDegradation();
 		int degradationPercent = 15;
-		String absolutePath = "C:\\Users\\Kevin\\Desktop\\TCCII_v1.0.1_FINAL.pdf";
-		String encoded = "C:\\Users\\Kevin\\Desktop\\TCCII_v1.0.1_FINAL_Encoded.pdf";
-		String redundancy = "C:\\Users\\Kevin\\Desktop\\TCCII_v1.0.1_FINAL_Redundancy.pdf";
-		String hash = "C:\\Users\\Kevin\\Desktop\\TCCII_v1.0.1_FINAL_Hash.pdf";
+		String absolutePath = "Z:\\The Art of Data Hiding with Reed-Solomon Error Correcting Codes.pdf";
+		String encoded = "Z:\\The Art of Data Hiding with Reed-Solomon Error Correcting Codes_Encoded.pdf";
+		String redundancy = "Z:\\The Art of Data Hiding with Reed-Solomon Error Correcting Codes_Redundancy.pdf";
+		String hash = "Z:\\The Art of Data Hiding with Reed-Solomon Error Correcting Codes_Hash.pdf";
 
 		// Encoder
-		//degradation.encoder(absolutePath, degradationPercent);
+		degradation.encoder(absolutePath, degradationPercent);
 
 		// Decoder
-		degradation.decoder(absolutePath, encoded, redundancy, hash, degradationPercent);
+		//degradation.decoder(absolutePath, encoded, redundancy, hash, degradationPercent);
 
 	}
 
