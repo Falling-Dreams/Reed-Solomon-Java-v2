@@ -101,19 +101,21 @@ public class ReversibleDegradation {
 				primitive = 69643;
 				size = 65536;
 				n = 65535;
-
+				// 10,20,30,40,50
+				// 30: 26215 19660(t)
+				// 40: 13103 26214(t)
 				switch (degradationPercent) {
 				case 5:
 					k = 58983;
 					break;
 				case 10:
-					k = 52431;
+					k = 52431; //52429 (k) 6553 (t)
 					break;
 				case 15:
-					k = 45879;
+					k = 45879; //45875
 					break;
 				case 20:
-					k = 39327;
+					k = 39327; //39321 13107 (t)
 					break;
 				case 25:
 					k = 32775;
@@ -166,6 +168,7 @@ public class ReversibleDegradation {
 
 			}
 			// remainingRS > 0
+			// tirar do codigo o tratamento do resto
 			if (remainderRS > 0) {
 				int[] remainderRS8C = new int[n]; // New vector for the remainder symbols
 				System.arraycopy(kUnsigned, srcPosRemainder, remainderRS8C, 0, remainderRS);

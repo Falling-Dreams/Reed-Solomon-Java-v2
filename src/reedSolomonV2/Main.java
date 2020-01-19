@@ -2,6 +2,8 @@ package reedSolomonV2;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+
 import javax.smartcardio.CardException;
 
 public class Main {
@@ -30,13 +32,22 @@ public class Main {
 
 		ReversibleDegradation degradation = new ReversibleDegradation();
 		int degradationPercent = 5, m = 16;
-		String absolutePath = "Z:\\matrizes.pdf";
-		String encoded = "Z:\\matrizes_Encoded.pdf";
-		String redundancy = "Z:\\matrizes_Redundancy.pdf";
-		String hash = "Z:\\matrizes_Hash.pdf";
-
+		String absolutePath = "Z:\\The Art of Data Hiding with Reed-Solomon Error Correcting Codes.pdf";
+		String encoded = "Z:\\The Art of Data Hiding with Reed-Solomon Error Correcting Codes_Encoded.pdf";
+		String redundancy = "Z:\\The Art of Data Hiding with Reed-Solomon Error Correcting Codes_Redundancy.pdf";
+		String hash = "Z:\\The Art of Data Hiding with Reed-Solomon Error Correcting Codes_Hash.pdf";
+		SHA512 sha512 = new SHA512();
+		NFCHandle nfc = new NFCHandle();
+		byte[] uid = nfc.UID();
+		//System.out.println(Arrays.toString(uid));
+		byte[] sha5122 = sha512.sha512(uid);
+		
+		System.out.println(Arrays.toString(sha5122));
+		System.out.println(sha5122.length);
+		
+		
 		// Encoder
-		degradation.encoder(absolutePath, degradationPercent, m);
+		//degradation.encoder(absolutePath, degradationPercent, m);
 
 		// Decoder
 		//degradation.decoder(absolutePath, encoded, redundancy, hash, degradationPercent, m);
