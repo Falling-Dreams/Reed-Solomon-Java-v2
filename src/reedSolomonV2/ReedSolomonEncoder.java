@@ -25,7 +25,7 @@ public final class ReedSolomonEncoder {
 	    cachedGenerators.add(new GenericGFPoly(field, new int[]{1}));
 	  }
 
-	  private GenericGFPoly buildGenerator(int degree) {
+	  public GenericGFPoly buildGenerator(int degree) {
 	    if (degree >= cachedGenerators.size()) {
 	      GenericGFPoly lastGenerator = cachedGenerators.get(cachedGenerators.size() - 1);
 	      for (int d = cachedGenerators.size(); d <= degree; d++) {
@@ -47,8 +47,6 @@ public final class ReedSolomonEncoder {
 	      throw new IllegalArgumentException("No data bytes provided");
 	    }
 	    GenericGFPoly generator = buildGenerator(ecBytes);
-	    System.out.println(generator);
-	    System.out.println(cachedGenerators);
 	    int[] infoCoefficients = new int[dataBytes];
 	    System.arraycopy(toEncode, 0, infoCoefficients, 0, dataBytes);
 	    GenericGFPoly info = new GenericGFPoly(field, infoCoefficients);

@@ -65,8 +65,8 @@ public final class GenericGF {
 	    zero = new GenericGFPoly(this, new int[]{0});
 	    one = new GenericGFPoly(this, new int[]{1});
 	    initialized = true;	    
-	    System.out.println(Arrays.toString(expTable));
-	    System.out.println(Arrays.toString(logTable));
+	    //System.out.println(Arrays.toString(expTable));
+	    //System.out.println(Arrays.toString(logTable));
 	  }
 	  
 	  private void checkInit() {
